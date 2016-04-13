@@ -1,0 +1,28 @@
+#!/usr/bin/env sh
+# bootstrap: populate home directory: create initial environment symlinks.
+# This file belongs to andrzejc/homedir: git@github.com:andrzejc/homedir.git
+set -e
+set -x
+
+# Pathogen install into ~/.vim/autoload
+mkdir -p ~/.vim/autoload ~/.vim/bundle && \
+	curl -LSso ~/.vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
+
+# Install .git-prompt.sh into ~/
+curl https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh \
+	-o ~/.git-prompt.sh
+
+# Install rc files symlinks into ~/
+LINKS=".profile .bashrc .bash_profile .vimrc .tmux.conf .tmux.conf.theme \
+.ansi-colors.sh"
+
+HOMEDIR=$(dirname $0)
+for x in ${LINKS}; do
+	SRC="$HOMEDIR/$x"
+	DST="$HOME/$x"
+	# Only if $DST doesn't already point to $SRC
+	if [[ (! -e "${DST}") || ("$(readlink ${DST})" != "${SRC}") ]]; then
+		# Symlink, creating (numbered) backup if already exists
+		ln -s --backup=existing "${SRC}" "${DST}"
+	fi
+done

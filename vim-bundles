@@ -1,0 +1,11 @@
+# vim-bundles: git repos to be automatically added to ~/.vim/bundles
+# This file belongs to andrzejc/homedir: git@github.com:andrzejc/homedir.git
+
+# vim-airline: status line
+https://github.com/vim-airline/vim-airline.git
+
+# supertab: enhanced completion with Tab
+https://github.com/ervandew/supertab.git
+
+# vim-matchit: enhanced brace matching with %
+https://github.com/codescv/vim-matchit.git
