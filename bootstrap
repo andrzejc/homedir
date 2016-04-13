@@ -23,6 +23,6 @@ for x in ${LINKS}; do
 	# Only if $DST doesn't already point to $SRC
 	if [[ (! -e "${DST}") || ("$(readlink ${DST})" != "${SRC}") ]]; then
 		# Symlink, creating (numbered) backup if already exists
-		ln -s --backup=existing "${SRC}" "${DST}"
+		ln -siv "${SRC}" "${DST}"
 	fi
 done
