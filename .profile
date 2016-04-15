@@ -34,21 +34,35 @@ export LC_IDENTIFICATION="pl_PL.UTF-8"
 . "$HOME/.ansi-colors.sh"
 
 # ls colors & options
-export LS_COLORS="\
-no=$ANSI_Default:\
-fi=$ANSI_Default:\
+OS=$(uname -s)
+case $OS in
+	Linux)
+		LS_COLOROPTS="--color=auto"
+		export LS_COLORS="\
 di=$ANSI_Blue:\
 ln=$ANSI_Cyan:\
-pi=$ANSI_Inverse;$ANSI_Yellow:\
 so=$ANSI_Magenta:\
-do=$ANSI_Magenta:\
-bd=$ANSI_BG_Black;$ANSI_Yellow;$ANSI_Bold:\
-cd=$ANSI_BG_Black;$ANSI_Yellow;$ANSI_Bold:\
-or=$ANSI_BG_Black;$ANSI_Red:\
-ex=$ANSI_Green"
+pi=$ANSI_Yellow:\
+ex=$ANSI_Green:\
+bd=$ANSI_BG_Black;$ANSI_Yellow:\
+cd=$ANSI_BG_Black;$ANSI_Yellow:\
+su=$ANSI_BG_Green;$ANSI_Black:\
+sg=$ANSI_BG_Green;$ANSI_Black:$ANSI_Bold:\
+tw=$ANSI_BG_Blue:$ANSI_Black:$ANSI_Bold:\
+ow=$ANSI_BG_Blue:$ANSI_Black:\
+or=$ANSI_BG_Cyan;$ANSI_Black:$ANSI_Bold:\
+mi=$ANSI_BG_Cyan;$ANSI_Black"
+		;;
+	*BSD|Darwin)
+		LS_COLOROPTS="-G"
+		#               di  so  ex  cd  sg  ow
+		#                 ln  pi  bd  su  tw
+		export LSCOLORS=exgxfxdacxdadaacAcEcec
+		;;
+esac
 
 # human-readable file sizes
-export LS_OPTIONS="-h --color=auto"
+export LS_OPTIONS="-h $LS_COLOROPTS"
 alias ls="ls $LS_OPTIONS"
 
 # Turn on GCC color output, if supported
