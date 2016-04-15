@@ -46,18 +46,18 @@ pi=$ANSI_Yellow:\
 ex=$ANSI_Green:\
 bd=$ANSI_BG_Black;$ANSI_Yellow:\
 cd=$ANSI_BG_Black;$ANSI_Yellow:\
-su=$ANSI_BG_Green;$ANSI_Black:\
-sg=$ANSI_BG_Green;$ANSI_Black:$ANSI_Bold:\
-tw=$ANSI_BG_Blue:$ANSI_Black:$ANSI_Bold:\
-ow=$ANSI_BG_Blue:$ANSI_Black:\
-or=$ANSI_BG_Cyan;$ANSI_Black:$ANSI_Bold:\
+su=$ANSI_Green;$ANSI_Bold:\
+sg=$ANSI_Green;$ANSI_Bold:\
+tw=$ANSI_Blue;$ANSI_Bold:\
+ow=$ANSI_Blue;$ANSI_Bold:\
+or=$ANSI_BG_Cyan;$ANSI_Black;$ANSI_Bold:\
 mi=$ANSI_BG_Cyan;$ANSI_Black"
 		;;
 	*BSD|Darwin)
 		LS_COLOROPTS="-G"
 		#               di  so  ex  cd  sg  ow
 		#                 ln  pi  bd  su  tw
-		export LSCOLORS=exgxfxdacxdadaacAcEcec
+		export LSCOLORS=exgxfxdacxdadaCxCxExEx
 		;;
 esac
 
