@@ -3,6 +3,7 @@
 
 # vim-airline: status line
 https://github.com/vim-airline/vim-airline.git
+https://github.com/vim-airline/vim-airline-themes.git
 
 # supertab: enhanced completion with Tab
 https://github.com/ervandew/supertab.git

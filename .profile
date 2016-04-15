@@ -11,8 +11,6 @@ if [ -d "$HOME/bin" ]; then
 	export PATH="$PATH:$HOME/bin"
 fi
 
-. "$HOME/.ansi-colors.sh"
-
 export LESS="-R"
 export PAGER="less"
 export EDITOR="vim"
@@ -22,6 +20,18 @@ export TZ="Europe/Warsaw"           # that's what it is
 export LANG="en_US.UTF-8"           # don't want crappy polish translations
 export LC_COLLATE="pl_PL.UTF-8"     # ...but sort order with ogonki is ok
 export LC_TIME="pl_PL.UTF-8"        # as well as time format
+export LC_CTYPE="pl_PL.UTF-8"
+export LC_NUMERIC="pl_PL.UTF-8"
+export LC_MONETARY="pl_PL.UTF-8"
+export LC_PAPER="pl_PL.UTF-8"
+export LC_NAME="pl_PL.UTF-8"
+export LC_ADDRESS="pl_PL.UTF-8"
+export LC_TELEPHONE="pl_PL.UTF-8"
+export LC_MEASUREMENT="pl_PL.UTF-8"
+export LC_IDENTIFICATION="pl_PL.UTF-8"
+
+# Pull in ANSI color ids instead of numbers
+. "$HOME/.ansi-colors.sh"
 
 # ls colors & options
 export LS_COLORS="\
@@ -65,7 +75,6 @@ function start_agent {
 	ssh-agent | sed 's/^echo/#echo/' > "${SSH_ENV}"
 	chmod 600 "${SSH_ENV}"
 	. "${SSH_ENV}" > /dev/null
-	ssh-add;
 }
 
 if [ -f "${SSH_ENV}" ]; then
@@ -82,16 +91,17 @@ fi
 
 # Use HOSTNAME_LOCAL in .profile.local to override displayed hostname
 [ ! -z "$HOSTNAME_LOCAL" ] || HOSTNAME_LOCAL=$(hostname)
-	
+
 export GIT_PS1_SHOWDIRTYSTATE=1
 export PS1="\
 \[\033[$ANSI_Bold;${ANSI_Green}m\]\u@${HOSTNAME_LOCAL}\[\033[$ANSI_Bold;${ANSI_Blue}m\] \
-\w\[\033[$ANSI_Bold;${ANSI_Yellow}m\]$(__git_ps1)\[\033[$ANSI_Bold;${ANSI_Blue}m\] \
+\w\[\033[$ANSI_Bold;${ANSI_Yellow}m\]\$(__git_ps1 )\[\033[$ANSI_Bold;${ANSI_Blue}m\] \
 \$\[\033[${ANSI_Default}m\] "
 
+# If running within X Terminal or screen/tmux, use prompt to set tab title
 xterm-titlebar-prompt() {
 	case $TERM in
-		xterm*)
+		xterm*|screen*)
 			local TITLEBAR='\[\033]0;\u@${HOSTNAME_LOCAL}:\w\007\]'
 			;;
 		*)

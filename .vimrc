@@ -23,6 +23,9 @@ set incsearch
 set ignorecase
 set smartcase
 
+" This allows buffers to be hidden if you've modified a buffer.
+set hidden
+
 if v:version > 703 || v:version == 703 && has("patch541")
   set formatoptions+=j " Delete comment character when joining commented lines
 endif
@@ -33,6 +36,7 @@ set background=light
 
 let g:airline#extensions#tabline#enabled = 1
 let g:airline_powerline_fonts = 1
+let g:airline_theme='powerlineish'
 
 " Special characters for tab, trailing ws, eol, nbsp & horiz. scroll indicators
 set list listchars=tab:»·,trail:˾,eol:↲,precedes:❰,extends:❱,nbsp:˽
@@ -54,7 +58,7 @@ set cpoptions+=n
 set mouse=a
 
 hi NonText ctermfg=LightGrey ctermbg=NONE
-hi SpecialKey ctermfg=LightGrey ctermbg=NONE 
+hi SpecialKey ctermfg=LightGrey ctermbg=NONE
 hi Comment ctermfg=246 cterm=NONE
 
 " Line numbers column

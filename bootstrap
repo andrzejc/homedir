@@ -4,9 +4,25 @@
 set -e
 set -x
 
+HOMEDIR=$(realpath $(dirname $0))
+
 # Pathogen install into ~/.vim/autoload
 mkdir -p ~/.vim/autoload ~/.vim/bundle && \
 	curl -LSso ~/.vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
+
+# Clone or update vim plugin repos
+cat $HOMEDIR/vim-bundles | sed -e 's/#.*$//' -e '/^\w*$/d' | \
+	while read repo; do
+		name=`basename $repo | sed s/\\.git$//`
+		bundledir="$HOME/.vim/bundle/$name"
+		if [ -d "$bundledir" ]; then
+			pushd "$bundledir"
+			git pull --quiet || echo "warning: git pull failed for $bundledir"
+			popd
+		else
+			git clone "$repo" "$bundledir"
+		fi
+	done
 
 # Install .git-prompt.sh into ~/
 curl https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh \
@@ -16,13 +32,12 @@ curl https://raw.githubusercontent.com/git/git/master/contrib/completion/git-pro
 LINKS=".profile .bashrc .bash_profile .vimrc .tmux.conf .tmux.conf.theme \
 .ansi-colors.sh"
 
-HOMEDIR=$(dirname $0)
 for x in ${LINKS}; do
-	SRC="$HOMEDIR/$x"
-	DST="$HOME/$x"
-	# Only if $DST doesn't already point to $SRC
-	if [[ (! -e "${DST}") || ("$(readlink ${DST})" != "${SRC}") ]]; then
-		# Symlink, creating (numbered) backup if already exists
-		ln -siv "${SRC}" "${DST}"
+	src="$HOMEDIR/$x"
+	dst="$HOME/$x"
+	# Only if $dst doesn't already point to $src
+	if [[ (! -e "${dst}") || (! "${dst}" -ef "${src}") ]]; then
+		# Symlink, with confirmation if already exists
+		ln -siv "${src}" "${dst}"
 	fi
 done
