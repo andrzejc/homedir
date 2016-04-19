@@ -51,7 +51,7 @@ sg=$ANSI_Green;$ANSI_Bold:\
 tw=$ANSI_Blue;$ANSI_Bold:\
 ow=$ANSI_Blue;$ANSI_Bold:\
 or=$ANSI_BG_Cyan;$ANSI_Black;$ANSI_Bold:\
-mi=$ANSI_BG_Cyan;$ANSI_Black"
+mi=$ANSI_Red"
 		;;
 	*BSD|Darwin)
 		LS_COLOROPTS="-G"
