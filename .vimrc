@@ -77,4 +77,7 @@ set textwidth=80
 set colorcolumn=-2,-1,-0
 highlight ColorColumn ctermbg=253 guibg=lightgray
 
+if !empty(glob("~/.vimrc.local"))
+  source ~/.vimrc.local
+endif
 " vim:set ft=vim et ts=2 sw=2:

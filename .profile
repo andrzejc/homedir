@@ -91,13 +91,15 @@ function start_agent {
 	. "${SSH_ENV}" > /dev/null
 }
 
-if [ -f "${SSH_ENV}" ]; then
-	. "${SSH_ENV}" > /dev/null
-	ps -ef | grep ${SSH_AGENT_PID} | grep ssh-agent$ > /dev/null || {
+if [ "x$SSH_AGENT_DISABLE_AUTORUN" != "x1" ]; then
+	if [ -f "${SSH_ENV}" ]; then
+		. "${SSH_ENV}" > /dev/null
+		ps -ef | grep ${SSH_AGENT_PID} | grep ssh-agent$ > /dev/null || {
+			start_agent;
+		}
+	else
 		start_agent;
-	}
-else
-	start_agent;
+	fi
 fi
 
 # Setup shell prompt including Git status
@@ -112,8 +114,8 @@ export PS1="\
 \w\[\033[$ANSI_Bold;${ANSI_Yellow}m\]\$(__git_ps1 )\[\033[$ANSI_Bold;${ANSI_Blue}m\] \
 \$\[\033[${ANSI_Default}m\] "
 
-# If running within X Terminal or screen/tmux, use prompt to set tab title
-xterm-titlebar-prompt() {
+## If running within X Terminal or screen/tmux, use prompt to set tab title
+xterm_titlebar_prompt() {
 	case $TERM in
 		xterm*|screen*)
 			local TITLEBAR='\[\033]0;\u@${HOSTNAME_LOCAL}:\w\007\]'
@@ -125,4 +127,6 @@ xterm-titlebar-prompt() {
 	export PS1="${TITLEBAR}${PS1}"
 }
 
-xterm-titlebar-prompt
+if [ "x$XTERM_TITLE_PROMPT_DISABLE" != "x1" ]; then
+	xterm_titlebar_prompt
+fi
