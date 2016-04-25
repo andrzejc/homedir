@@ -130,3 +130,7 @@ xterm_titlebar_prompt() {
 if [ "x$XTERM_TITLE_PROMPT_DISABLE" != "x1" ]; then
 	xterm_titlebar_prompt
 fi
+
+# start tmux in 256-color mode
+# TODO make it conditional on $TERM *-256color
+alias tmux="tmux -2"

@@ -77,6 +77,14 @@ set textwidth=80
 set colorcolumn=-2,-1,-0
 highlight ColorColumn ctermbg=253 guibg=lightgray
 
+" Start nerdtree automatically if no initial file set
+autocmd StdinReadPre * let s:std_in=1
+autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
+" Use Ctrl+T to toggle nerdtree
+map <C-t> :NERDTreeToggle<CR>
+" Don't need to explicitely close nerdtree if last buffer open
+autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
+
 if !empty(glob("~/.vimrc.local"))
   source ~/.vimrc.local
 endif
