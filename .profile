@@ -8,7 +8,7 @@ if [ -f "$HOME/.profile.local" ]; then
 fi
 
 if [ -d "$HOME/bin" ]; then
-	export PATH="$PATH:$HOME/bin"
+	export PATH="$HOME/bin:$PATH"
 fi
 
 export LESS="-R"
