@@ -34,13 +34,15 @@ curl https://raw.githubusercontent.com/git/git/master/contrib/completion/git-pro
 
 # Install rc files symlinks into ~/
 LINKS=".profile .bashrc .bash_profile .vimrc .tmux.conf .tmux.conf.theme \
-.ansi-colors.sh"
+.ansi-colors.sh .cgdb/cgdbrc"
 
 for x in ${LINKS}; do
 	src="$HOMEDIR/$x"
 	dst="$HOME/$x"
 	# Only if $dst doesn't already point to $src
 	if [[ (! -e "${dst}") || (! "${dst}" -ef "${src}") ]]; then
+		dir=$(dirname ${x})
+		[ -d "$HOME/$dir" ] || mkdir -p "$HOME/$dir"
 		# Symlink, with confirmation if already exists
 		ln -siv "${src}" "${dst}"
 	fi
