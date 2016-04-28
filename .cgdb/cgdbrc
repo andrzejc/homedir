@@ -1,0 +1,4 @@
+set as=highlight
+set ts=4
+set winsplit=top_big
+
