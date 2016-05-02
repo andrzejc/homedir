@@ -13,3 +13,6 @@ https://github.com/codescv/vim-matchit.git
 
 # NERD Tree
 https://github.com/scrooloose/nerdtree.git
+
+# automatically sets PASTE mode when pasting from external apps
+https://github.com/ConradIrwin/vim-bracketed-paste.git

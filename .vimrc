@@ -13,11 +13,6 @@ set ls=2
 " don't display -- INSERT -- below airline
 set noshowmode
 
-if &encoding ==# 'latin1'
-  set encoding=utf-8
-endif
-
-set pastetoggle=<f5>
 set hlsearch
 set incsearch
 set ignorecase
