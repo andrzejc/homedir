@@ -11,7 +11,7 @@ if [ -d "$HOME/bin" ]; then
 	export PATH="$HOME/bin:$PATH"
 fi
 
-export LESS="-R"
+export LESS=" -R "
 export PAGER="less"
 export EDITOR="vim"
 
@@ -132,10 +132,12 @@ if [ "x$XTERM_TITLE_PROMPT_DISABLE" != "x1" ]; then
 fi
 
 SRCHILITE_SH="$(which src-hilite-lesspipe.sh)"
+LESSPIPE_SH="$(which lesspipe.sh)"
 
 [ -x "$SRCHILITE_SH" ] && {
 	export LESSOPEN="| $SRCHILITE_SH %s"
-	export LESS=' -R '
+} || [ -x "$LESSPIPE_SH" ] && {
+	export LESSOPEN="| $LESSPIPE_SH %s"
 } || {}
 
 # start tmux in 256-color mode
