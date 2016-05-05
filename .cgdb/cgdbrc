@@ -2,3 +2,8 @@ set as=highlight
 set ts=4
 set winsplit=top_big
 
+imap <F5> continue<CR>
+imap <S-F5> kill<CR>
+imap <F10> next<CR>
+imap <F11> step<CR>
+

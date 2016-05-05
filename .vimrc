@@ -52,18 +52,18 @@ set cpoptions+=n
 " Enable use of mouse in N,I,V,C modes
 set mouse=a
 
-hi NonText ctermfg=LightGrey ctermbg=NONE
-hi SpecialKey ctermfg=LightGrey ctermbg=NONE
-hi Comment ctermfg=246 cterm=NONE
+hi NonText ctermfg=LightGrey ctermbg=NONE guifg=#D0D0D0 guibg=NONE
+hi SpecialKey ctermfg=LightGrey ctermbg=NONE guifg=#D0D0D0 guibg=NONE
+hi Comment ctermfg=246 cterm=NONE gui=italic guifg=#808080
 
 " Line numbers column
-hi LineNr ctermbg=254 ctermfg=Gray
+hi LineNr ctermbg=254 ctermfg=Gray guibg=#f7f7f7 guifg=#808080
 set number
 set numberwidth=4
 
 " Show current cursor line with slightly darker background
 set cursorline
-hi CursorLine cterm=NONE ctermbg=254
+hi CursorLine cterm=NONE ctermbg=254 guibg=#F7F7F7
 autocmd WinEnter * setlocal cursorline
 autocmd WinLeave * setlocal nocursorline
 
