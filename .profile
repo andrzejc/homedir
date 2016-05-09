@@ -138,7 +138,7 @@ LESSPIPE_SH="$(which lesspipe.sh)"
 	export LESSOPEN="| $SRCHILITE_SH %s"
 } || [ -x "$LESSPIPE_SH" ] && {
 	export LESSOPEN="| $LESSPIPE_SH %s"
-} || {}
+}
 
 # start tmux in 256-color mode
 # TODO make it conditional on $TERM *-256color
