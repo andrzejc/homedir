@@ -134,11 +134,11 @@ fi
 SRCHILITE_SH="$(which src-hilite-lesspipe.sh)"
 LESSPIPE_SH="$(which lesspipe.sh)"
 
-[ -x "$SRCHILITE_SH" ] && {
+if [ -x "$SRCHILITE_SH" ]; then 
 	export LESSOPEN="| $SRCHILITE_SH %s"
-} || [ -x "$LESSPIPE_SH" ] && {
+elif [ -x "$LESSPIPE_SH" ]; then
 	export LESSOPEN="| $LESSPIPE_SH %s"
-} || {}
+fi
 
 # start tmux in 256-color mode
 # TODO make it conditional on $TERM *-256color
