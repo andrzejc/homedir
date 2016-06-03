@@ -11,7 +11,7 @@ if [ -d "$HOME/bin" ]; then
 	export PATH="$HOME/bin:$PATH"
 fi
 
-export LESS=" -R "
+export LESS=" -Rx4 "
 export PAGER="less"
 export EDITOR="vim"
 
@@ -110,9 +110,9 @@ fi
 
 export GIT_PS1_SHOWDIRTYSTATE=1
 export PS1="\
-\[\033[$ANSI_Bold;${ANSI_Green}m\]\u@${HOSTNAME_LOCAL}\[\033[$ANSI_Bold;${ANSI_Blue}m\] \
-\w\[\033[$ANSI_Bold;${ANSI_Yellow}m\]\$(__git_ps1 )\[\033[$ANSI_Bold;${ANSI_Blue}m\] \
-\$\[\033[${ANSI_Default}m\] "
+\[\033[$ANSI_Bold;${ANSI_Green}m\]\u@${HOSTNAME_LOCAL}\
+\[\033[$ANSI_Bold;${ANSI_Blue}m\] \w\[\033[$ANSI_Bold;${ANSI_Yellow}m\]\
+\$(__git_ps1 )\[\033[$ANSI_Bold;${ANSI_Blue}m\] \$\[\033[${ANSI_Default}m\] "
 
 ## If running within X Terminal or screen/tmux, use prompt to set tab title
 xterm_titlebar_prompt() {
@@ -142,4 +142,6 @@ fi
 
 # start tmux in 256-color mode
 # TODO make it conditional on $TERM *-256color
-alias tmux="tmux -2"
+if [[ $TERM == *-256color ]]; then
+	alias tmux="tmux -2"
+fi
