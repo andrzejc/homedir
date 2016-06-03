@@ -17,10 +17,12 @@ cat $HOMEDIR/vim-bundles | sed -e 's/#.*$//' -e '/^\w*$/d' | \
 		bundledir="$HOME/.vim/bundle/$name"
 		if [ -d "$bundledir" ]; then
 			pushd "$bundledir"
-			git pull --quiet || echo "warning: git pull failed for $bundledir"
+			git pull --quiet || echo \
+				"warning: git pull failed for $bundledir" >&2
 			popd
 		else
-			git clone "$repo" "$bundledir"
+			git clone --quiet "$repo" "$bundledir" || echo \
+				"warning: git clone failed for $repo" >&2
 		fi
 	done
 

@@ -1,6 +1,6 @@
 if [ -f "$HOME/.profile.override" ]; then
 	. "$HOME/.profile.override"
-	exit 0
+	exit $?
 fi
 
 if [ -f "$HOME/.profile.local" ]; then
@@ -148,6 +148,6 @@ fi
 
 # start tmux in 256-color mode
 # TODO make it conditional on $TERM *-256color
-if [[ $TERM == *-256color ]]; then
+if [[ $TERM == *256col* ]]; then
 	alias tmux="tmux -2"
 fi
