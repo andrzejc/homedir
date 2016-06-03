@@ -1,4 +1,3 @@
-
 execute pathogen#infect()
 
 syntax on
@@ -55,7 +54,9 @@ set mouse=a
 set mousemodel=popup_setpos
 
 set ttyfast
+" Report mouse position while dragging too
 set ttymouse=xterm2
+" Disable vim builtin termcap database
 set notbi term=$TERM
 
 hi NonText ctermfg=LightGrey ctermbg=NONE guifg=#D0D0D0 guibg=NONE
