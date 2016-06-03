@@ -140,6 +140,12 @@ elif [ -x "$LESSPIPE_SH" ]; then
 	export LESSOPEN="| $LESSPIPE_SH %s"
 fi
 
+if [ -d "$HOME/.pyenv" ]; then
+	export PATH="$HOME/.pyenv/bin:$PATH"
+	eval "$(pyenv init -)"
+	eval "$(pyenv virtualenv-init -)"
+fi
+
 # start tmux in 256-color mode
 # TODO make it conditional on $TERM *-256color
 if [[ $TERM == *-256color ]]; then
