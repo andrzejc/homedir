@@ -51,10 +51,16 @@ set modeline
 set cpoptions+=n
 " Enable use of mouse in N,I,V,C modes
 set mouse=a
+" Display popup menu on right click
+set mousemodel=popup_setpos
+
+set ttyfast
+set ttymouse=xterm2
+set notbi term=$TERM
 
 hi NonText ctermfg=LightGrey ctermbg=NONE guifg=#D0D0D0 guibg=NONE
 hi SpecialKey ctermfg=LightGrey ctermbg=NONE guifg=#D0D0D0 guibg=NONE
-hi Comment ctermfg=246 cterm=NONE gui=italic guifg=#808080
+hi Comment ctermfg=246 cterm=italic gui=italic guifg=#808080
 
 " Line numbers column
 hi LineNr ctermbg=254 ctermfg=Gray guibg=#f7f7f7 guifg=#808080
