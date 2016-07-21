@@ -26,9 +26,14 @@ cat $HOMEDIR/vim-bundles | sed -e 's/#.*$//' -e '/^\w*$/d' | \
 		fi
 	done
 
+# Install extended C syntax file for VIM
+mkdir -p ~/.vim/after/syntax
+curl -LSso ~/.vim/after/syntax/c.vim \
+	'http://www.vim.org/scripts/download_script.php?src_id=14548'
+
 # Install .git-prompt.sh into ~/
 curl https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh \
-	-o ~/.git-prompt.sh
+	-LSso ~/.git-prompt.sh
 
 # Install tmux plugin manager
 [ -d "$HOME/.tmux/plugins/tpm" ] || \
