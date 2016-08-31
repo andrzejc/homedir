@@ -76,8 +76,10 @@ autocmd WinLeave * setlocal nocursorline
 
 " Display vertical var at columns 78,79,80
 set textwidth=80
-set colorcolumn=-2,-1,-0
-highlight ColorColumn ctermbg=253 guibg=lightgray
+if version >= 703
+  set colorcolumn=-2,-1,-0
+  highlight ColorColumn ctermbg=253 guibg=lightgray
+endif
 
 " Start nerdtree automatically if no initial file set
 autocmd StdinReadPre * let s:std_in=1
