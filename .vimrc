@@ -81,6 +81,8 @@ if version >= 703
   highlight ColorColumn ctermbg=253 guibg=lightgray
 endif
 
+autocmd BufNewFile,BufReadPost *.md set filetype=markdown
+
 if !empty(glob("~/.vimrc.local"))
   source ~/.vimrc.local
 endif
