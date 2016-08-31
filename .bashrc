@@ -1,5 +1,6 @@
 if [ -f "$HOME/.bashrc.override" ]; then
 	. "$HOME/.bashrc.override"
+	exit $?
 fi
 
 # I'm starting to consider .bashrc unneccessary
