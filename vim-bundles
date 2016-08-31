@@ -12,7 +12,8 @@ https://github.com/ervandew/supertab.git
 https://github.com/codescv/vim-matchit.git
 
 # NERD Tree
-https://github.com/scrooloose/nerdtree.git
+# https://github.com/scrooloose/nerdtree.git
+# never really used it
 
 # automatically sets PASTE mode when pasting from external apps
 https://github.com/ConradIrwin/vim-bracketed-paste.git
