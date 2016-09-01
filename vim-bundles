@@ -17,3 +17,6 @@ https://github.com/codescv/vim-matchit.git
 
 # automatically sets PASTE mode when pasting from external apps
 https://github.com/ConradIrwin/vim-bracketed-paste.git
+
+# support EditorConfig files (.editorconfig)
+https://github.com/editorconfig/editorconfig-vim.git
