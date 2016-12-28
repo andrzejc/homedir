@@ -28,6 +28,16 @@ endif
 set t_Co=256
 set background=light
 
+if has("gui_running")
+  if has("gui_gtk2")
+    :set guifont=Menlo\ Regular\ for\ Powerline\ 11
+  elseif has("gui_win32")
+    :set guifont=Luxi_Mono:h12:cANSI
+  else
+    :set guifont=Menlo\ Regular\ for\ Powerline:h11
+  endif
+endif
+
 let g:airline#extensions#tabline#enabled = 1
 let g:airline_powerline_fonts = 1
 let g:airline_theme='powerlineish'
