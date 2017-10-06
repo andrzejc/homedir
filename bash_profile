@@ -3,16 +3,19 @@
 
 export HOMEDIR="$( cd "$( dirname "$( readlink "${BASH_SOURCE[0]}" )" )" && pwd )"
 
-if [ -f "$HOME/.bash_profile.override" ]; then
+if [ -f "$HOME/.bash_profile.override" ]
+then
 	. "$HOME/.bash_profile.override"
 	exit $?
 fi
 
-if [ -f "$HOME/.bash_profile.local" ]; then
+if [ -f "$HOME/.bash_profile.local" ]
+then
 	. "$HOME/.bash_profile.local"
 fi
 
-if [ -d "$HOME/bin" ]; then
+if [ -d "$HOME/bin" ]
+then
 	export PATH="$HOME/bin:$PATH"
 fi
 
@@ -42,6 +45,7 @@ source "$HOMEDIR/ansi-colors.sh"
 OS=$(uname -s)
 case $OS in
 	Linux)
+		export HOMEDIR_OS_VARIANT="linux"
 		LS_COLOROPTS="--color=auto"
 		export LS_COLORS="\
 di=$ANSI_Blue:\
@@ -59,6 +63,7 @@ or=$ANSI_BG_Cyan;$ANSI_Black;$ANSI_Bold:\
 mi=$ANSI_Red"
 		;;
 	*BSD|Darwin)
+		export HOMEDIR_OS_VARIANT="macos"
 		LS_COLOROPTS="-G"
 		#               di  so  ex  cd  sg  ow
 		#                 ln  pi  bd  su  tw
@@ -150,15 +155,30 @@ then
 	export LESSOPEN="| $LESSPIPE_SH %s"
 fi
 
-if [ -d "$HOME/.pyenv" ];
-then
-	export PATH="$HOME/.pyenv/bin:$PATH"
-	eval "$(pyenv init -)"
-	eval "$(pyenv virtualenv-init -)"
-fi
+#if [ -d "$HOME/.pyenv" ];
+#then
+#	export PATH="$HOME/.pyenv/bin:$PATH"
+#	eval "$(pyenv init -)"
+#	eval "$(pyenv virtualenv-init -)"
+#fi
+
+#   Set default blocksize for ls, df, du
+#   from this: http://hints.macworld.com/comment.php?mode=view&cid=24491
+#   ------------------------------------------------------------
+export BLOCKSIZE=1k
 
 # start tmux in 256-color mode
 if [[ $TERM == *256col* ]]
 then
 	alias tmux="tmux -2"
+fi
+
+alias ll='ls -lAhp'
+cd() { builtin cd "$@"; ll; }
+alias cd..='cd ../'
+mcd() { mkdir -p "$1" && cd "$1"; }
+
+if [ -f "$HOMEDIR/bash_profile.$HOMEDIR_OS_VARIANT" ]
+then
+	source "$HOMEDIR/bash_profile.$HOMEDIR_OS_VARIANT"
 fi
