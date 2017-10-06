@@ -1,10 +1,15 @@
-if [ -f "$HOME/.profile.override" ]; then
-	. "$HOME/.profile.override"
+#!/usr/bin/env bash
+# shebang so that editor recognizes source 
+
+export HOMEDIR="$( cd "$( dirname "$( readlink "${BASH_SOURCE[0]}" )" )" && pwd )"
+
+if [ -f "$HOME/.bash_profile.override" ]; then
+	. "$HOME/.bash_profile.override"
 	exit $?
 fi
 
-if [ -f "$HOME/.profile.local" ]; then
-	. "$HOME/.profile.local"
+if [ -f "$HOME/.bash_profile.local" ]; then
+	. "$HOME/.bash_profile.local"
 fi
 
 if [ -d "$HOME/bin" ]; then
@@ -31,7 +36,7 @@ export LC_MEASUREMENT="pl_PL.UTF-8"
 export LC_IDENTIFICATION="pl_PL.UTF-8"
 
 # Pull in ANSI color ids instead of numbers
-. "$HOME/.ansi-colors.sh"
+source "$HOMEDIR/ansi-colors.sh"
 
 # ls colors & options
 OS=$(uname -s)
@@ -81,7 +86,7 @@ if [ ! -d "$SSH_DIR" ]; then
 	chmod 700 "$SSH_DIR"
 fi
 
-# Start ssh-agent if not running
+# Start ssh-agent if asked locally
 SSH_ENV="$SSH_DIR/environment"
 
 function start_agent {
@@ -91,7 +96,8 @@ function start_agent {
 	. "${SSH_ENV}" > /dev/null
 }
 
-if [ "x$SSH_AGENT_DISABLE_AUTORUN" != "x1" ]; then
+# Demand explicit ssh-agent autorun! this was annoying!
+if [ "x$SSH_AGENT_ENABLE_AUTORUN" = "x1" ]; then
 	if [ -f "${SSH_ENV}" ]; then
 		. "${SSH_ENV}" > /dev/null
 		ps -ef | grep ${SSH_AGENT_PID} | grep ssh-agent$ > /dev/null || {
@@ -103,7 +109,8 @@ if [ "x$SSH_AGENT_DISABLE_AUTORUN" != "x1" ]; then
 fi
 
 # Setup shell prompt including Git status
-. "$HOME/.git-prompt.sh"
+# TODO: this file is missing!
+source "$HOMEDIR/git-prompt.sh"
 
 # Use HOSTNAME_LOCAL in .profile.local to override displayed hostname
 [ ! -z "$HOSTNAME_LOCAL" ] || HOSTNAME_LOCAL=$(hostname)
@@ -127,27 +134,31 @@ xterm_titlebar_prompt() {
 	export PS1="${TITLEBAR}${PS1}"
 }
 
-if [ "x$XTERM_TITLE_PROMPT_DISABLE" != "x1" ]; then
+if [ "x$XTERM_TITLE_PROMPT_DISABLE" != "x1" ]
+then
 	xterm_titlebar_prompt
 fi
 
 SRCHILITE_SH="$(which src-hilite-lesspipe.sh 2>/dev/null)"
 LESSPIPE_SH="$(which lesspipe.sh 2>/dev/null)"
 
-if [ -x "$SRCHILITE_SH" ]; then 
+if [ -x "$SRCHILITE_SH" ]
+then 
 	export LESSOPEN="| $SRCHILITE_SH %s"
-elif [ -x "$LESSPIPE_SH" ]; then
+elif [ -x "$LESSPIPE_SH" ]
+then
 	export LESSOPEN="| $LESSPIPE_SH %s"
 fi
 
-if [ -d "$HOME/.pyenv" ]; then
+if [ -d "$HOME/.pyenv" ];
+then
 	export PATH="$HOME/.pyenv/bin:$PATH"
 	eval "$(pyenv init -)"
 	eval "$(pyenv virtualenv-init -)"
 fi
 
 # start tmux in 256-color mode
-# TODO make it conditional on $TERM *-256color
-if [[ $TERM == *256col* ]]; then
+if [[ $TERM == *256col* ]]
+then
 	alias tmux="tmux -2"
 fi

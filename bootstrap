@@ -1,56 +1,114 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 # bootstrap: populate home directory: create initial environment symlinks.
 # This file belongs to andrzejc/homedir: git@github.com:andrzejc/homedir.git
 set -e
 set -x
 
-HOMEDIR=$(realpath $(dirname $0))
+HOMEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# Pathogen install into ~/.vim/autoload
-mkdir -p ~/.vim/autoload ~/.vim/bundle && \
-	curl -LSso ~/.vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
+git_clone_or_pull() {
+	local url="$1"
+	local out_dir="$2"
+	if [ -d "$out_dir" ] 
+	then
+		pushd "$out_dir"
+		git pull --quiet || echo \
+			"warning: git pull failed for $out_dir" >&2
+		popd
+	else
+		git clone --quiet "$repo" "$out_dir" || echo \
+			"warning: git clone failed for $repo" >&2
+	fi
+}
 
-# Clone or update vim plugin repos
-cat $HOMEDIR/vim-bundles | sed -e 's/#.*$//' -e '/^\w*$/d' | \
-	while read repo; do
-		name=`basename $repo | sed s/\\.git$//`
-		bundledir="$HOME/.vim/bundle/$name"
-		if [ -d "$bundledir" ]; then
-			pushd "$bundledir"
-			git pull --quiet || echo \
-				"warning: git pull failed for $bundledir" >&2
-			popd
-		else
-			git clone --quiet "$repo" "$bundledir" || echo \
-				"warning: git clone failed for $repo" >&2
+install_vim_pathogen() {
+	# Pathogen install into ~/.vim/autoload
+	mkdir -p ~/.vim/autoload ~/.vim/bundle && \
+		curl -LSso ~/.vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
+}
+
+clone_vim_plugin_bundle() {
+	local repo="$1"
+	local name=`basename $repo | sed s/\\.git$//`
+	local bundledir="$HOME/.vim/bundle/$name"
+	git_clone_or_pull "$repo" "$bundledir"
+}
+
+install_vim_bundles() {
+	# Clone or update vim plugin repos
+	cat $HOMEDIR/vim-bundles | sed -e 's/#.*$//' -e '/^\w*$/d' | \
+		while read repo
+		do
+			clone_vim_plugin_bundle "$repo"
+		done
+}
+
+install_vim_c_syntax_file() {
+	# Install extended C syntax file for VIM
+	mkdir -p ~/.vim/after/syntax
+	# TODO switch to using https sources immediately!
+	curl -LSso ~/.vim/after/syntax/c.vim \
+		'http://www.vim.org/scripts/download_script.php?src_id=14548'
+}
+
+install_git_prompt() {
+	# Install .git-prompt.sh into ~/
+	curl https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh \
+		-LSso "$HOMEDIR/git-prompt.sh"
+}
+
+install_tmux_tpm() {
+	# Install tmux plugin manager
+	git_clone_or_pull \
+		https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
+}
+
+remove_leading_dot() {
+	local str="$1"
+	echo "$str" | tail -c +2
+}
+
+install_symlinks() {
+	# Install rc files symlinks into ~/
+	LINKS=".profile .bashrc .bash_profile .vimrc .tmux.conf .tmux.conf.theme \
+		.cgdb/cgdbrc"
+
+	for x in ${LINKS}
+	do
+		local src="$HOMEDIR/$(remove_leading_dot $x)"
+		local dst="$HOME/$x"
+		# Only if $dst doesn't already point to $src
+		if [[ (! -e "${dst}") || (! "${dst}" -ef "${src}") ]]
+		then
+			local dir="$(dirname ${x})"
+			# this will fail preventing overwriting file with dir symlink
+			[ -d "$HOME/$dir" ] || mkdir -p "$HOME/$dir"
+			# Symlink, with confirmation if already exists
+			ln -siv "${src}" "${dst}"
 		fi
 	done
+}
 
-# Install extended C syntax file for VIM
-mkdir -p ~/.vim/after/syntax
-curl -LSso ~/.vim/after/syntax/c.vim \
-	'http://www.vim.org/scripts/download_script.php?src_id=14548'
+case "${1:-all}" in
+	all)
+		install_vim_pathogen
+		install_vim_bundles
+		install_vim_c_syntax_file
+		install_git_prompt
+		install_tmux_tpm
+		install_symlinks
+	;;
+	vim_pathogen|\
+	vim_bundles|\
+	vim_c_syntax_file|\
+	git_prompt|\
+	tmux_tpm|\
+	symlinks)
+		eval "install_$1"
+	;;
+	*)
+		# TODO display usage
+		exit 1
+	;;
+esac
 
-# Install .git-prompt.sh into ~/
-curl https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh \
-	-LSso ~/.git-prompt.sh
-
-# Install tmux plugin manager
-[ -d "$HOME/.tmux/plugins/tpm" ] || \
-	git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
-
-# Install rc files symlinks into ~/
-LINKS=".profile .bashrc .bash_profile .vimrc .tmux.conf .tmux.conf.theme \
-.ansi-colors.sh .cgdb/cgdbrc"
-
-for x in ${LINKS}; do
-	src="$HOMEDIR/$x"
-	dst="$HOME/$x"
-	# Only if $dst doesn't already point to $src
-	if [[ (! -e "${dst}") || (! "${dst}" -ef "${src}") ]]; then
-		dir=$(dirname ${x})
-		[ -d "$HOME/$dir" ] || mkdir -p "$HOME/$dir"
-		# Symlink, with confirmation if already exists
-		ln -siv "${src}" "${dst}"
-	fi
-done
