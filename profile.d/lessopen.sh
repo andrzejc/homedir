@@ -11,6 +11,7 @@ then
 	if [ -x "$SRCHILITE_SH" ]
 	then
 		alias lesspipe="$LESSPIPE_SH"
-		eval "$( "$SRCHILITE_SH" )"
+		export LESSOPEN="| "$SRCHILITE_SH" %s"
+		export LESS_ADVANCED_PROCESSOR=1
 	fi
 fi
