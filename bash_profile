@@ -86,6 +86,8 @@ homedir_module ssh-agent.sh
 homedir_module setup-prompt.sh
 homedir_module xterm-titlebar.sh
 homedir_module lessopen.sh
+homedir_module brew-overrides.sh
+homedir_module perl-local-lib.sh
 
 #if [ -d "$HOME/.pyenv" ];
 #then
