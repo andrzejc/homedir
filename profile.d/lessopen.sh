@@ -6,11 +6,10 @@ LESSPIPE_SH="$(which lesspipe.sh 2>/dev/null)"
 
 if [ -x "$LESSPIPE_SH" ]
 then
-	export LESSOPEN="| $LESSPIPE_SH %s"
+	eval "$( "$LESSPIPE_SH" )"
 	# src-hilite-lesspipe.sh requires regular lesspipe
 	if [ -x "$SRCHILITE_SH" ]
 	then
-		alias lesspipe="$LESSPIPE_SH"
 		export LESSOPEN="| "$SRCHILITE_SH" %s"
 		export LESS_ADVANCED_PROCESSOR=1
 	fi
