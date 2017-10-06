@@ -69,17 +69,21 @@ homedir_source() {
 	fi
 }
 
+homedir_module() {
+	homedir_source "profile.d/$1"
+}
+
 export LESS=" -Rx4 "
 export PAGER="less"
 export EDITOR="vim"
 
-homedir_source locale.sh
-homedir_source ls-options.sh
-homedir_source gcc-colors.sh
-homedir_source ssh-agent.sh
-homedir_source setup-prompt.sh
-homedir_source xterm-titlebar.sh
-homedir_source lessopen.sh
+homedir_module locale.sh
+homedir_module ls-options.sh
+homedir_module gcc-colors.sh
+homedir_module ssh-agent.sh
+homedir_module setup-prompt.sh
+homedir_module xterm-titlebar.sh
+homedir_module lessopen.sh
 
 #if [ -d "$HOME/.pyenv" ];
 #then

@@ -1,6 +1,6 @@
 # Setup shell prompt including Git status
-homedir_source git-prompt.sh
-homedir_source ansi-colors.sh
+homedir_module git-prompt.sh
+homedir_module ansi-colors.sh
 
 # Use HOSTNAME_LOCAL in .profile.local to override displayed hostname
 HOSTNAME_PROMPT="${HOSTNAME_LOCAL:-$(hostname)}"

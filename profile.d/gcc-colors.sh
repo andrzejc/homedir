@@ -1,4 +1,6 @@
 # Turn on GCC color output, if supported
+homedir_module ansi-colors.sh
+
 export GCC_COLORS="\
 error=$ANSI_Bold;$ANSI_Red:\
 warning=$ANSI_Bold;$ANSI_Yellow:\
