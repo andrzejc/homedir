@@ -78,35 +78,8 @@ homedir_source ls-options.sh
 homedir_source gcc-colors.sh
 homedir_source ssh-agent.sh
 homedir_source setup-prompt.sh
-
-## If running within X Terminal or screen/tmux, use prompt to set tab title
-xterm_titlebar_prompt() {
-	case $TERM in
-		xterm*|screen*)
-			local TITLEBAR='\[\033]0;\u@${HOSTNAME_PROMPT}:\w\007\]'
-			;;
-		*)
-			local TITLEBAR=''
-			;;
-	esac
-	export PS1="${TITLEBAR}${PS1}"
-}
-
-if [ "x$XTERM_TITLE_PROMPT_DISABLE" != "x1" ]
-then
-	xterm_titlebar_prompt
-fi
-
-SRCHILITE_SH="$(which src-hilite-lesspipe.sh 2>/dev/null)"
-LESSPIPE_SH="$(which lesspipe.sh 2>/dev/null)"
-
-if [ -x "$SRCHILITE_SH" ]
-then 
-	export LESSOPEN="| $SRCHILITE_SH %s"
-elif [ -x "$LESSPIPE_SH" ]
-then
-	export LESSOPEN="| $LESSPIPE_SH %s"
-fi
+homedir_source xterm-titlebar.sh
+homedir_source lessopen.sh
 
 #if [ -d "$HOME/.pyenv" ];
 #then
