@@ -16,8 +16,10 @@ fi
 
 if [ -d "$HOME/bin" ]
 then
-	export PATH="$HOME/bin:$PATH"
+	PATH="$HOME/bin:$PATH"
 fi
+
+export PATH="$PATH:$HOMEDIR/bin"
 
 homedir_os_variant() {
 	local OS=$(uname -s)
