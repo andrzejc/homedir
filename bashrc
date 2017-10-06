@@ -1,15 +1,15 @@
-if [ -f "$HOME/.bashrc.override" ]; then
-	. "$HOME/.bashrc.override"
+if [ -f "$HOME/.bashrc.override" ]
+then
+	source "$HOME/.bashrc.override"
 	exit $?
 fi
 
-# oh wait. iTerm2 shell integration. Do it before .bashrc.local, so it can 
-# run tmux
-test -e "${HOME}/.iterm2_shell_integration.bash" && \
-	source "${HOME}/.iterm2_shell_integration.bash"
-
-if [ -f "$HOME/.bashrc.local" ]; then
-	. "$HOME/.bashrc.local"
+if [ -f "$HOME/.bashrc.local" ]
+then
+	source "$HOME/.bashrc.local"
 fi
 
-
+if [ -f "$HOMEDIR/bashrc.$HOMEDIR_OS_VARIANT" ]
+then
+	source "$HOMEDIR/bashrc.$HOMEDIR_OS_VARIANT"
+fi

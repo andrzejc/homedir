@@ -5,13 +5,13 @@ export HOMEDIR="$( cd "$( dirname "$( readlink "${BASH_SOURCE[0]}" )" )" && pwd 
 
 if [ -f "$HOME/.bash_profile.override" ]
 then
-	. "$HOME/.bash_profile.override"
+	source "$HOME/.bash_profile.override"
 	exit $?
 fi
 
 if [ -f "$HOME/.bash_profile.local" ]
 then
-	. "$HOME/.bash_profile.local"
+	source "$HOME/.bash_profile.local"
 fi
 
 if [ -d "$HOME/bin" ]
@@ -19,70 +19,67 @@ then
 	export PATH="$HOME/bin:$PATH"
 fi
 
+homedir_os_variant() {
+	local OS=$(uname -s)
+	case $OS in
+	Linux)
+		echo linux; return
+		;;
+	Darwin)
+		echo macos; return
+		;;
+	*BSD)
+		echo bsd; return
+		;;
+	*)
+		echo default; return
+		;;
+	esac
+}
+
+export HOMEDIR_OS_VARIANT=$(homedir_os_variant)
+
+homedir_make_var_name() {
+	local path="$1"
+	echo "$path" | sed -e "s/[^_a-zA-Z0-9]/_/g"
+}
+
+__homedir_source_and_set_flag() {
+	local file="$1"
+	local flag="$2"
+	if [ -f "$file" ]
+	then
+		source "$file"
+		local res=$?
+		eval "$flag=1"
+		return $res
+	fi
+	return 1
+}
+
+homedir_import() {
+	local base="$1"
+	local var_name="__homedir_import_$( homedir_make_var_name "$base" )"
+	# TODO bash dynamic vars don't work here - declare limits the scope of the
+	# variable so it's not available here and test always fails
+	if [ "$(eval "echo \$$var_name")" != "1" ]
+	then
+		__homedir_source_and_set_flag "$HOME/.${base}.override" "$var_name" ||\
+		__homedir_source_and_set_flag "$HOMEDIR/${base}.${HOMEDIR_OS_VARIANT}" "$var_name" ||\
+		__homedir_source_and_set_flag "$HOMEDIR/${base}" "$var_name" ||\
+		>&2 echo "warning: homedir_import($base): no variant found" && return 1
+	fi
+}
+
 export LESS=" -Rx4 "
 export PAGER="less"
 export EDITOR="vim"
 
-# Locale/time zone settings
-export TZ="Europe/Warsaw"           # that's what it is
-export LANG="en_US.UTF-8"           # don't want crappy polish translations
-export LC_COLLATE="pl_PL.UTF-8"     # ...but sort order with ogonki is ok
-export LC_TIME="pl_PL.UTF-8"        # as well as time format
-export LC_CTYPE="pl_PL.UTF-8"
-export LC_NUMERIC="pl_PL.UTF-8"
-export LC_MONETARY="pl_PL.UTF-8"
-export LC_PAPER="pl_PL.UTF-8"
-export LC_NAME="pl_PL.UTF-8"
-export LC_ADDRESS="pl_PL.UTF-8"
-export LC_TELEPHONE="pl_PL.UTF-8"
-export LC_MEASUREMENT="pl_PL.UTF-8"
-export LC_IDENTIFICATION="pl_PL.UTF-8"
-
+homedir_import locale.sh
 # Pull in ANSI color ids instead of numbers
-source "$HOMEDIR/ansi-colors.sh"
-
-# ls colors & options
-OS=$(uname -s)
-case $OS in
-	Linux)
-		export HOMEDIR_OS_VARIANT="linux"
-		LS_COLOROPTS="--color=auto"
-		export LS_COLORS="\
-di=$ANSI_Blue:\
-ln=$ANSI_Cyan:\
-so=$ANSI_Magenta:\
-pi=$ANSI_Yellow:\
-ex=$ANSI_Green:\
-bd=$ANSI_BG_Black;$ANSI_Yellow:\
-cd=$ANSI_BG_Black;$ANSI_Yellow:\
-su=$ANSI_Green;$ANSI_Bold:\
-sg=$ANSI_Green;$ANSI_Bold:\
-tw=$ANSI_Blue;$ANSI_Bold:\
-ow=$ANSI_Blue;$ANSI_Bold:\
-or=$ANSI_BG_Cyan;$ANSI_Black;$ANSI_Bold:\
-mi=$ANSI_Red"
-		;;
-	*BSD|Darwin)
-		export HOMEDIR_OS_VARIANT="macos"
-		LS_COLOROPTS="-G"
-		#               di  so  ex  cd  sg  ow
-		#                 ln  pi  bd  su  tw
-		export LSCOLORS=exgxfxdacxdadaCxCxExEx
-		;;
-esac
-
-# human-readable file sizes
-export LS_OPTIONS="-h $LS_COLOROPTS"
-alias ls="ls $LS_OPTIONS"
-
-# Turn on GCC color output, if supported
-export GCC_COLORS="\
-error=$ANSI_Bold;$ANSI_Red:\
-warning=$ANSI_Bold;$ANSI_Yellow:\
-note=$ANSI_Bold;$ANSI_Cyan:\
-caret=$ANSI_Bold;$ANSI_Green:\
-locus=$ANSI_Bold:\
-quote=$ANSI_Bold"
+homedir_import ansi-colors.sh
+homedir_import ls-options.sh
+homedir_import gcc-colors.sh
 
 # Make sure .ssh exists and has proper permissions
 SSH_DIR="$HOME/.ssh"
@@ -114,15 +111,17 @@ if [ "x$SSH_AGENT_ENABLE_AUTORUN" = "x1" ]; then
 fi
 
 # Setup shell prompt including Git status
-# TODO: this file is missing!
-source "$HOMEDIR/git-prompt.sh"
+if [ -f "$HOMEDIR/git-prompt.sh" ]
+then
+	source "$HOMEDIR/git-prompt.sh"
+fi
 
 # Use HOSTNAME_LOCAL in .profile.local to override displayed hostname
-[ ! -z "$HOSTNAME_LOCAL" ] || HOSTNAME_LOCAL=$(hostname)
+HOSTNAME_PROMPT="${HOSTNAME_LOCAL:-$(hostname)}"
 
 export GIT_PS1_SHOWDIRTYSTATE=1
 export PS1="\
-\[\033[$ANSI_Bold;${ANSI_Green}m\]\u@${HOSTNAME_LOCAL}\
+\[\033[$ANSI_Bold;${ANSI_Green}m\]\u@${HOSTNAME_PROMPT}\
 \[\033[$ANSI_Bold;${ANSI_Blue}m\] \w\[\033[$ANSI_Bold;${ANSI_Yellow}m\]\
 \$(__git_ps1 )\[\033[$ANSI_Bold;${ANSI_Blue}m\] \$\[\033[${ANSI_Default}m\] "
 
@@ -161,11 +160,6 @@ fi
 #	eval "$(pyenv init -)"
 #	eval "$(pyenv virtualenv-init -)"
 #fi
-
-#   Set default blocksize for ls, df, du
-#   from this: http://hints.macworld.com/comment.php?mode=view&cid=24491
-#   ------------------------------------------------------------
-export BLOCKSIZE=1k
 
 # start tmux in 256-color mode
 if [[ $TERM == *256col* ]]
