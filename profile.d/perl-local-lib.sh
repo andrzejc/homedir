@@ -1,6 +1,13 @@
 
 # setup Perl to use local::lib package location to persist CPAN packages across
 # perl upgrades
-[ $(which perl 2> /dev/null) ] &&\
-	[ -d "$HOME/perl5/lib/perl5" ] &&\
-	eval "$(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib)"
+
+setup_perl_local_lib() {
+	local lib_dir="$1"
+	[ $(which perl 2> /dev/null) ] && [ -d "$lib_dir" ] && {
+		eval "$(perl -I$lib_dir -Mlocal::lib)"
+		return
+	} || true
+}
+
+setup_perl_local_lib "$HOME/perl5/lib/perl5"
