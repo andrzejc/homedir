@@ -90,6 +90,17 @@ install_symlinks() {
 	done
 }
 
+install_clean_obsolete_files() {
+	local FILES="$HOME/.ansi-colors.sh $HOME/.git-prompt.sh"
+	for x in $FILES
+	do
+		if [ -f "$x" ]
+		then
+			rm -iv "$x"
+		fi
+	done
+}
+
 case "${1:-all}" in
 	all)
 		install_vim_pathogen
@@ -98,13 +109,15 @@ case "${1:-all}" in
 		install_git_prompt
 		install_tmux_tpm
 		install_symlinks
+		install_clean_obsolete_files
 	;;
 	vim_pathogen|\
 	vim_bundles|\
 	vim_c_syntax_file|\
 	git_prompt|\
 	tmux_tpm|\
-	symlinks)
+	symlinks|\
+	clean_obsolete_files)
 		eval "install_$1"
 	;;
 	*)
