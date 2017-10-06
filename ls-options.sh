@@ -1,3 +1,6 @@
+# Pull in ANSI color ids instead of numbers
+homedir_source ansi-colors.sh
+
 # ls colors & options
 case $HOMEDIR_OS_VARIANT in
 	linux)

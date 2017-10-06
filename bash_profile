@@ -57,17 +57,15 @@ __homedir_source_and_set_flag() {
 	return 1
 }
 
-homedir_import() {
+homedir_source() {
 	local base="$1"
-	local var_name="__homedir_import_$( homedir_make_var_name "$base" )"
-	# TODO bash dynamic vars don't work here - declare limits the scope of the
-	# variable so it's not available here and test always fails
+	local var_name="__homedir_source_$( homedir_make_var_name "$base" )"
 	if [ "$(eval "echo \$$var_name")" != "1" ]
 	then
 		__homedir_source_and_set_flag "$HOME/.${base}.override" "$var_name" ||\
 		__homedir_source_and_set_flag "$HOMEDIR/${base}.${HOMEDIR_OS_VARIANT}" "$var_name" ||\
 		__homedir_source_and_set_flag "$HOMEDIR/${base}" "$var_name" ||\
-		>&2 echo "warning: homedir_import($base): no variant found" && return 1
+		>&2 echo "warning: homedir_source $base: no variant found" && return 1
 	fi
 }
 
@@ -75,61 +73,17 @@ export LESS=" -Rx4 "
 export PAGER="less"
 export EDITOR="vim"
 
-homedir_import locale.sh
-# Pull in ANSI color ids instead of numbers
-homedir_import ansi-colors.sh
-homedir_import ls-options.sh
-homedir_import gcc-colors.sh
-
-# Make sure .ssh exists and has proper permissions
-SSH_DIR="$HOME/.ssh"
-if [ ! -d "$SSH_DIR" ]; then
-	mkdir "$SSH_DIR"
-	chmod 700 "$SSH_DIR"
-fi
-
-# Start ssh-agent if asked locally
-SSH_ENV="$SSH_DIR/environment"
-
-function start_agent {
-	echo "Initialising new SSH agent..."
-	ssh-agent | sed 's/^echo/#echo/' > "${SSH_ENV}"
-	chmod 600 "${SSH_ENV}"
-	. "${SSH_ENV}" > /dev/null
-}
-
-# Demand explicit ssh-agent autorun! this was annoying!
-if [ "x$SSH_AGENT_ENABLE_AUTORUN" = "x1" ]; then
-	if [ -f "${SSH_ENV}" ]; then
-		. "${SSH_ENV}" > /dev/null
-		ps -ef | grep ${SSH_AGENT_PID} | grep ssh-agent$ > /dev/null || {
-			start_agent;
-		}
-	else
-		start_agent;
-	fi
-fi
-
-# Setup shell prompt including Git status
-if [ -f "$HOMEDIR/git-prompt.sh" ]
-then
-	source "$HOMEDIR/git-prompt.sh"
-fi
-
-# Use HOSTNAME_LOCAL in .profile.local to override displayed hostname
-HOSTNAME_PROMPT="${HOSTNAME_LOCAL:-$(hostname)}"
-
-export GIT_PS1_SHOWDIRTYSTATE=1
-export PS1="\
-\[\033[$ANSI_Bold;${ANSI_Green}m\]\u@${HOSTNAME_PROMPT}\
-\[\033[$ANSI_Bold;${ANSI_Blue}m\] \w\[\033[$ANSI_Bold;${ANSI_Yellow}m\]\
-\$(__git_ps1 )\[\033[$ANSI_Bold;${ANSI_Blue}m\] \$\[\033[${ANSI_Default}m\] "
+homedir_source locale.sh
+homedir_source ls-options.sh
+homedir_source gcc-colors.sh
+homedir_source ssh-agent.sh
+homedir_source setup-prompt.sh
 
 ## If running within X Terminal or screen/tmux, use prompt to set tab title
 xterm_titlebar_prompt() {
 	case $TERM in
 		xterm*|screen*)
-			local TITLEBAR='\[\033]0;\u@${HOSTNAME_LOCAL}:\w\007\]'
+			local TITLEBAR='\[\033]0;\u@${HOSTNAME_PROMPT}:\w\007\]'
 			;;
 		*)
 			local TITLEBAR=''
