@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # shebang so that editor recognizes source
 
-export HOMEDIR="$( cd "$( dirname "$( readlink "${BASH_SOURCE[0]}" )" )" && pwd )"
+export HOMEDIR="$(cd "$(dirname "$(readlink "${BASH_SOURCE[0]}")")" && pwd)"
 
 source "$HOMEDIR/homedir-lib.sh"
 
@@ -16,12 +16,8 @@ then
 	source "$HOME/.bash_profile.local"
 fi
 
-if [ -d "$HOME/bin" ]
-then
-	PATH="$HOME/bin:$PATH"
-fi
-
-export PATH="$PATH:$HOMEDIR/bin"
+homedir_path_prepend "$HOME/bin"
+homedir_path_append  "$HOMEDIR/bin"
 
 export LESS=" -Rx4 "
 export PAGER="less"
