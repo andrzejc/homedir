@@ -1,13 +1,15 @@
 [ -n "${__SHLIB_SOURCED:-}" ] && return
 __SHLIB_SOURCED=1
 
-# shstr_join <sep> <args...> - join arguments using sep as separator
-shstr_join() {
-    local sep="${1:-}"
-    shift
+shstr_join_infix() {
+    local prefix="$1"
+    local suffix="$2"
+    local sep="${3:-}"
+    shift 3
     local res=""
     for s in "$@"
     do
+        [ -n "$s" ] && s="${prefix}${s}${suffix}"
         if [ -n "${res}" ]
         then
             if [ -n "${s}" ]
@@ -19,6 +21,21 @@ shstr_join() {
         fi
     done
     echo "${res}"
+}
+
+# shstr_join <sep> <args...> - join arguments using sep as separator
+shstr_join() { shstr_join_infix "" "" "$@"; }
+
+shstr_join_pre() {
+    local prefix="${1:-}"
+    shift
+    shstr_join_infix "${prefix}" "" "$@"
+}
+
+shstr_join_app() {
+    local suffix="${1:-}"
+    shift
+    shstr_join_infix "" "${suffix}" "$@"
 }
 
 shstr_alt() { shstr_join "|" "$@"; }
@@ -217,4 +234,54 @@ sh_source_with_guard() {
         return ${res}
     fi
     return 1
+}
+
+shlist_apply() {
+    local expr="$1"
+    shift
+    for s in "$@"
+    do
+        echo "$s" | sed -e "$expr"
+    done
+}
+
+# __shlib_sed_escape() {
+#     for p in "$@"
+#     do
+#         echo "$p" | sed -e 's#\/#\\/#g' -e 's/&/\\\&/g'
+#     done
+# }
+
+# __shlist_sed_infix() {
+#     local prefix="$(__shlib_sed_escape "$1")"
+#     local suffix="$(__shlib_sed_escape "$2")"
+#     shift 2
+#     local expr='s/^.*$/'
+#     expr+="$prefix"
+#     expr+="&"
+#     expr+="$suffix"
+#     expr+='/'
+#     shlist_apply "$expr" "$@"
+# }
+
+shlist_infix() {
+    local prefix="$1"
+    local suffix="$2"
+    shift 2
+    for s in "$@"
+    do
+        echo "${prefix}${s}${suffix}"
+    done
+}
+
+shlist_prefix() {
+    local prefix="$1"
+    shift
+    shlist_infix "${prefix}" "" "$@"
+}
+
+shlist_suffix() {
+    local suffix="$1"
+    shift
+    shlist_infix "" "${suffix}" "$@"
 }
