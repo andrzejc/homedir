@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
 # shebang so that editor recognizes source
 
-export HOMEDIR="$(cd "$(dirname "$(readlink "${BASH_SOURCE[0]}")")" && pwd)"
+__parent_dir() {
+	local d="$1"
+	[ -h "$d" ] && d=$(readlink "$d")
+	(cd "$(dirname "$d")" && pwd)
+}
+
+export HOMEDIR="$(__parent_dir "${BASH_SOURCE[0]}")"
 
 source "$HOMEDIR/homedir-lib.sh"
 

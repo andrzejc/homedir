@@ -4,7 +4,7 @@
 set -e
 set -x
 
-HOMEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+HOMEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 source "$HOMEDIR/shlib.sh"
 
@@ -21,7 +21,7 @@ git_clone_or_pull() {
 	fi
 }
 
-install_vim_pathogen() {
+run_vim_pathogen() {
 	# Pathogen install into ~/.vim/autoload
 	mkdir -p ~/.vim/autoload ~/.vim/bundle && \
 		curl -LSso ~/.vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
@@ -34,7 +34,7 @@ clone_vim_plugin_bundle() {
 	git_clone_or_pull "$repo" "$bundledir"
 }
 
-install_vim_bundles() {
+run_vim_bundles() {
 	# Clone or update vim plugin repos
 	cat $HOMEDIR/vim-bundles | sed -e 's/#.*$//' -e '/^\w*$/d' | \
 		while read repo
@@ -43,7 +43,7 @@ install_vim_bundles() {
 		done
 }
 
-install_vim_c_syntax_file() {
+run_vim_c_syntax_file() {
 	# Install extended C syntax file for VIM
 	mkdir -p ~/.vim/after/syntax
 	# TODO switch to using https sources immediately!
@@ -51,14 +51,14 @@ install_vim_c_syntax_file() {
 		'http://www.vim.org/scripts/download_script.php?src_id=14548'
 }
 
-install_git_prompt() {
+run_git_prompt() {
 	# Install .git-prompt.sh into ~/
 	mkdir -p "$HOMEDIR/profile.d"
 	curl https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh \
 		-LSso "$HOMEDIR/profile.d/git-prompt.sh"
 }
 
-install_tmux_tpm() {
+run_tmux_tpm() {
 	# Install tmux plugin manager
 	git_clone_or_pull \
 		https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
@@ -69,7 +69,7 @@ remove_leading_dot() {
 	echo "$str" | tail -c +2
 }
 
-install_symlinks() {
+run_symlinks() {
 	# Install rc files symlinks into ~/
 	local LINKS=".bashrc .bash_profile .vimrc .tmux.conf .tmux.conf.theme \
 		.cgdb/cgdbrc"
@@ -90,7 +90,7 @@ install_symlinks() {
 	done
 }
 
-install_clean_obsolete_files() {
+run_clean_obsolete_files() {
 	local FILES="$HOME/.ansi-colors.sh $HOME/.git-prompt.sh"
 	for x in $FILES
 	do
@@ -101,15 +101,23 @@ install_clean_obsolete_files() {
 	done
 }
 
+run_check() {
+	for t in $(ls $HOMEDIR/test/test-*.sh)
+	do
+		${SHELL} -c "$t"
+	done
+}
+
 case "${1:-all}" in
 	all)
-		install_vim_pathogen
-		install_vim_bundles
-		install_vim_c_syntax_file
-		install_git_prompt
-		install_tmux_tpm
-		install_symlinks
-		install_clean_obsolete_files
+		run_vim_pathogen
+		run_vim_bundles
+		run_vim_c_syntax_file
+		run_git_prompt
+		run_tmux_tpm
+		run_symlinks
+		run_clean_obsolete_files
+		run_check
 	;;
 	vim_pathogen|\
 	vim_bundles|\
@@ -117,8 +125,9 @@ case "${1:-all}" in
 	git_prompt|\
 	tmux_tpm|\
 	symlinks|\
-	clean_obsolete_files)
-		eval "install_$1"
+	clean_obsolete_files|\
+	check)
+		eval "run_$1"
 	;;
 	*)
 		# TODO display usage

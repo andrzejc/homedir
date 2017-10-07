@@ -23,11 +23,11 @@ shstr_join() {
 
 shstr_alt() { shstr_join "|" "$@"; }
 
-SHLIB_RAISE_LEVELS="ERROR FATAL"
+SHLIB_ERROR_RAISE_LEVELS=${SHLIB_ERROR_RAISE_LEVELS:-"ERROR FATAL"}
 
 sherr_should_raise() {
     local level="$1"
-    for rl in ${SHLIB_RAISE_LEVELS:-FATAL}
+    for rl in ${SHLIB_ERROR_RAISE_LEVELS:-FATAL}
     do
         [ "${level}" = "${rl}" ] && return 0
     done
@@ -74,7 +74,7 @@ shlog_fatal() { shlog_  FATAL  "$@"; }
 shlog_info()  { shlog_ "INFO " "$@"; }
 shlog_info_() { shlog_ "INFO " "$@"; }
 
-SHLIB_ASSERT_ENABLED=0
+SHLIB_ASSERT_ENABLED=${SHLIB_ASSERT_ENABLED:-0}
 
 sh_assert_() {
     if [ "${SHLIB_ASSERT_ENABLED:-0}" != 1 ]
@@ -109,7 +109,7 @@ sh_assert_() {
     fi
     if [ "${success}" != "$1" ]
     then
-        shlog_ ASSRT "failed:  ${cmd}\n\tat $0(${lineno})"
+        shlog_ ASSRT "failed:  ${cmd}\n\tat $0:${lineno}"
         return 1
     fi
 }
@@ -185,25 +185,6 @@ shpath_app() { shpath_join after  "$@"; }
 # which suppressing error messsages
 sh_which() { which "$@" 2> /dev/null; }
 
-__shlib_test_shpath_join() {
-    unset __shlib_test_shpath_join_res
-    shpath_app __shlib_test_path_join_got a
-    sh_assert "$__shlib_test_path_join_got" = "a"
-    shpath_app __shlib_test_path_join_got pa
-    sh_assert "$__shlib_test_path_join_got" = "a:pa"
-    shpath_pre __shlib_test_path_join_got b
-    sh_assert "$__shlib_test_path_join_got" = "b:a:pa"
-    shpath_pre __shlib_test_path_join_got pb
-    sh_assert "$__shlib_test_path_join_got" = "pb:b:a:pa"
-    shpath_pre __shlib_test_path_join_got pr1 pr2
-    sh_assert "$__shlib_test_path_join_got" = "pr2:pr1:pb:b:a:pa"
-    shpath_app __shlib_test_path_join_got po1 po2
-    sh_assert "$__shlib_test_path_join_got" = "pr2:pr1:pb:b:a:pa:po1:po2"
-    export __shlib_test_path_join_got
-}
-
-# __shlib_test_shpath_join
-
 __shlib_os_variant() {
     local os=$(uname -s)
     case $os in
@@ -222,7 +203,8 @@ __shlib_os_variant() {
     esac
 }
 
-SHLIB_OS_VARIANT=$(__shlib_os_variant)
+__SHLIB_DETECTED_OS_VARIANT=$(__shlib_os_variant)
+SHLIB_OS_VARIANT=${SHLIB_OS_VARIANT:-${__SHLIB_DETECTED_OS_VARIANT}}
 
 sh_source_with_guard() {
     local file="$1"
