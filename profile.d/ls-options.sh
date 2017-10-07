@@ -1,11 +1,11 @@
 # Pull in ANSI color ids instead of numbers
 homedir_module ansi-colors.sh
 
-# ls colors & options
-case $HOMEDIR_OS_VARIANT in
-	linux)
-		LS_COLOROPTS="--color=auto"
-		export LS_COLORS="\
+setup_ls_options() {
+	case $SHLIB_OS_VARIANT in
+		linux)
+			LS_COLOROPTS="--color=auto"
+			export LS_COLORS="\
 di=$ANSI_Blue:\
 ln=$ANSI_Cyan:\
 so=$ANSI_Magenta:\
@@ -19,19 +19,18 @@ tw=$ANSI_Blue;$ANSI_Bold:\
 ow=$ANSI_Blue;$ANSI_Bold:\
 or=$ANSI_BG_Cyan;$ANSI_Black;$ANSI_Bold:\
 mi=$ANSI_Red"
-		;;
-	bsd|macos)
-		LS_COLOROPTS="-G"
-		#               di  so  ex  cd  sg  ow
-		#                 ln  pi  bd  su  tw
-		export LSCOLORS=exgxfxdacxdadaCxCxExEx
-		;;
-esac
+			;;
+		bsd|macos)
+			LS_COLOROPTS="-G"
+			#               di  so  ex  cd  sg  ow
+			#                 ln  pi  bd  su  tw
+			export LSCOLORS=exgxfxdacxdadaCxCxExEx
+			;;
+	esac
 
+	# human-readable file sizes
+	export LS_OPTIONS="-h $LS_COLOROPTS"
+	alias ls="ls $LS_OPTIONS"
+}
 
-
-# human-readable file sizes
-export LS_OPTIONS="-h $LS_COLOROPTS"
-alias ls="ls $LS_OPTIONS"
-
-
+setup_ls_options

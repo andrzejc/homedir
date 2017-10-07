@@ -4,7 +4,7 @@
 
 setup_perl_local_lib() {
 	local lib_dir="$1"
-	[ $(homedir_which perl) ] && [ -d "$lib_dir" ] && {
+	[ $(sh_which perl) ] && [ -d "${lib_dir}" ] && {
 		eval "$(perl -I${lib_dir} -Mlocal::lib)"
 		return
 	} || true

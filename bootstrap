@@ -6,7 +6,7 @@ set -x
 
 HOMEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-source "$HOMEDIR/homedir-lib.sh"
+source "$HOMEDIR/shlib.sh"
 
 git_clone_or_pull() {
 	local url="$1"
@@ -14,10 +14,10 @@ git_clone_or_pull() {
 	if [ -d "$out_dir" ]
 	then
 		pushd "$out_dir"
-		git pull --quiet || homedir_warn "git pull failed for $out_dir"
+		git pull --quiet || shlog_warn "git pull failed for $out_dir"
 		popd
 	else
-		git clone --quiet "$repo" "$out_dir" || homedir_warn "git clone failed for $repo"
+		git clone --quiet "$repo" "$out_dir" || shlog_warn "git clone failed for $repo"
 	fi
 }
 

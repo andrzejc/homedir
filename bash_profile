@@ -16,8 +16,8 @@ then
 	source "$HOME/.bash_profile.local"
 fi
 
-homedir_path_prepend "$HOME/bin"
-homedir_path_append  "$HOMEDIR/bin"
+shpath_pre "$HOME/bin"
+shpath_app "$HOMEDIR/bin"
 
 export LESS=" -Rx4 "
 export PAGER="less"

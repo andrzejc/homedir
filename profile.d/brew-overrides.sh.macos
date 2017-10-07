@@ -1,12 +1,13 @@
+#!/usr/bin/env bash
 
 use_brew_opt_override() {
 	local name="$1"
 
-	homedir_path_prepend "/usr/local/opt/$name/libexec/bin" ||\
-	homedir_path_prepend "/usr/local/opt/$name/bin" ||\
-	homedir_path_prepend "/usr/local/opt/$name/libexec"
+	shpath_pre "/usr/local/opt/$name/libexec/bin" || \
+	shpath_pre "/usr/local/opt/$name/bin" || \
+	shpath_pre "/usr/local/opt/$name/libexec"
 
-	homedir_path_prepend  PKG_CONFIG_PATH "/usr/local/opt/$name/lib/pkgconfig"
+	shpath_pre  PKG_CONFIG_PATH "/usr/local/opt/$name/lib/pkgconfig"
 	return 0
 }
 

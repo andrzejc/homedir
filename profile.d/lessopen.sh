@@ -1,16 +1,19 @@
 # setup less input/output preprocessor (LESSOPEN) env var
 
-SRCHILITE_SH="$(which src-hilite-lesspipe.sh 2>/dev/null)"
-LESSPIPE_SH="$(which lesspipe.sh 2>/dev/null)"
+setup_lessopen() {
+	local shs=$(sh_which src-hilite-lesspipe.sh)
+	local lps=$(sh_which lesspipe.sh)
 
-
-if [ -x "$LESSPIPE_SH" ]
-then
-	eval "$( "$LESSPIPE_SH" )"
-	# src-hilite-lesspipe.sh requires regular lesspipe
-	if [ -x "$SRCHILITE_SH" ]
+	if [ -x "${lps}" ]
 	then
-		export LESSOPEN="| "$SRCHILITE_SH" %s"
-		export LESS_ADVANCED_PROCESSOR=1
+		eval "$(${lps})"
+		# src-hilite-lesspipe.sh requires regular lesspipe
+		if [ -x "${shs}" ]
+		then
+			export LESSOPEN="| "${shs}" %s"
+			export LESS_ADVANCED_PROCESSOR=1
+		fi
 	fi
-fi
+}
+
+setup_lessopen
