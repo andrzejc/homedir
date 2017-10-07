@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
-# shebang so that editor recognizes source 
+# shebang so that editor recognizes source
 
 export HOMEDIR="$( cd "$( dirname "$( readlink "${BASH_SOURCE[0]}" )" )" && pwd )"
+
+source "$HOMEDIR/homedir-lib.sh"
 
 if [ -f "$HOME/.bash_profile.override" ]
 then
@@ -20,60 +22,6 @@ then
 fi
 
 export PATH="$PATH:$HOMEDIR/bin"
-
-homedir_os_variant() {
-	local OS=$(uname -s)
-	case $OS in
-	Linux)
-		echo linux; return
-		;;
-	Darwin)
-		echo macos; return
-		;;
-	*BSD)
-		echo bsd; return
-		;;
-	*)
-		echo default; return
-		;;
-	esac
-}
-
-export HOMEDIR_OS_VARIANT=$(homedir_os_variant)
-
-homedir_make_var_name() {
-	local path="$1"
-	echo "$path" | sed -e "s/[^_a-zA-Z0-9]/_/g"
-}
-
-__homedir_source_and_set_flag() {
-	local file="$1"
-	local flag="$2"
-	if [ -f "$file" ]
-	then
-		source "$file"
-		local res=$?
-		eval "$flag=1"
-		return $res
-	fi
-	return 1
-}
-
-homedir_source() {
-	local base="$1"
-	local var_name="__homedir_source_$( homedir_make_var_name "$base" )"
-	if [ "$(eval "echo \$$var_name")" != "1" ]
-	then
-		__homedir_source_and_set_flag "$HOME/.${base}.override" "$var_name" ||\
-		__homedir_source_and_set_flag "$HOMEDIR/${base}.${HOMEDIR_OS_VARIANT}" "$var_name" ||\
-		__homedir_source_and_set_flag "$HOMEDIR/${base}" "$var_name" ||\
-		>&2 echo "warning: homedir_source $base: no variant found" && return 1
-	fi
-}
-
-homedir_module() {
-	homedir_source "profile.d/$1"
-}
 
 export LESS=" -Rx4 "
 export PAGER="less"
@@ -106,6 +54,39 @@ alias ll='ls -lAhp'
 cd() { builtin cd "$@"; ll; }
 alias cd..='cd ../'
 mcd() { mkdir -p "$1" && cd "$1"; }
+
+#   ---------------------------
+#   4.  SEARCHING
+#   ---------------------------
+
+alias numf='echo $(ls -1 | wc -l)'          # numf:     Count of non-hidden files in current dir
+ff () { find . -name "$@" ; }               # ff:       Find file under the current directory
+#ffs () { /usr/bin/find . -name "$@"'*' ; }  # ffs:      Find file whose name starts with a given string
+#ffe () { /usr/bin/find . -name '*'"$@" ; }  # ffe:      Find file whose name ends with a given string
+
+#   extract:  Extract most know archives with one command
+#   ---------------------------------------------------------
+extract () {
+	if [ -f "$1" ]
+	then
+		case $1 in
+		*.tar.bz2)   tar xjf $1     ;;
+		*.tar.gz)    tar xzf $1     ;;
+		*.bz2)       bunzip2 $1     ;;
+		*.rar)       unrar e $1     ;;
+		*.gz)        gunzip $1      ;;
+		*.tar)       tar xf $1      ;;
+		*.tbz2)      tar xjf $1     ;;
+		*.tgz)       tar xzf $1     ;;
+		*.zip)       unzip $1       ;;
+		*.Z)         uncompress $1  ;;
+		*.7z)        7z x $1        ;;
+		*)     echo "'$1' cannot be extracted via extract()" ;;
+		esac
+	else
+		echo "'$1' is not a valid file"
+	fi
+}
 
 if [ -f "$HOMEDIR/bash_profile.$HOMEDIR_OS_VARIANT" ]
 then

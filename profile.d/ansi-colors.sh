@@ -1,4 +1,4 @@
-# .ansi-colors.sh: Definition of ANSI color escape sequences
+# ansi-colors.sh: Definition of ANSI color escape sequences
 # This file belongs to andrzejc/homedir: git@github.com:andrzejc/homedir.git
 
 ANSI_Black=30

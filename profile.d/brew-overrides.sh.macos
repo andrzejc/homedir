@@ -1,27 +1,17 @@
 
-try_prepend_dir() {
-	local var="$1"
-	local dir="$2"
-	if [ -d "$dir" ]
-	then
-		eval "export ${var}="${dir}:\$${var}""
-		return
-	fi
-	return 1
-}
-
 use_brew_opt_override() {
 	local name="$1"
 
-	try_prepend_dir PATH "/usr/local/opt/$name/libexec/bin" ||\
-	try_prepend_dir PATH "/usr/local/opt/$name/bin" ||\
-	try_prepend_dir PATH "/usr/local/opt/$name/libexec" 
-	
-	try_prepend_dir PKG_CONFIG_PATH "/usr/local/opt/$name/lib/pkgconfig"
+	homedir_path_prepend "/usr/local/opt/$name/libexec/bin" ||\
+	homedir_path_prepend "/usr/local/opt/$name/bin" ||\
+	homedir_path_prepend "/usr/local/opt/$name/libexec"
+
+	homedir_path_prepend  PKG_CONFIG_PATH "/usr/local/opt/$name/lib/pkgconfig"
 	return 0
 }
 
-
 use_brew_opt_override python
-use_brew_opt_override curl
+use_brew_opt_override ccache
+
+# use_brew_opt_override curl
 

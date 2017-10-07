@@ -6,18 +6,18 @@ set -x
 
 HOMEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+source "$HOMEDIR/homedir-lib.sh"
+
 git_clone_or_pull() {
 	local url="$1"
 	local out_dir="$2"
-	if [ -d "$out_dir" ] 
+	if [ -d "$out_dir" ]
 	then
 		pushd "$out_dir"
-		git pull --quiet || echo \
-			"warning: git pull failed for $out_dir" >&2
+		git pull --quiet || homedir_warn "git pull failed for $out_dir"
 		popd
 	else
-		git clone --quiet "$repo" "$out_dir" || echo \
-			"warning: git clone failed for $repo" >&2
+		git clone --quiet "$repo" "$out_dir" || homedir_warn "git clone failed for $repo"
 	fi
 }
 
@@ -71,7 +71,7 @@ remove_leading_dot() {
 
 install_symlinks() {
 	# Install rc files symlinks into ~/
-	LINKS=".profile .bashrc .bash_profile .vimrc .tmux.conf .tmux.conf.theme \
+	local LINKS=".bashrc .bash_profile .vimrc .tmux.conf .tmux.conf.theme \
 		.cgdb/cgdbrc"
 
 	for x in ${LINKS}
