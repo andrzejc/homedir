@@ -26,7 +26,6 @@ fi
 
 shpath_pre "$HOME/bin"
 shpath_app "$HOMEDIR/bin"
-export PATH
 
 export LESS=" -Rx4 "
 export PAGER="less"
@@ -41,13 +40,7 @@ homedir_module xterm-titlebar.sh
 homedir_module lessopen.sh
 homedir_module brew-overrides.sh
 homedir_module perl-local-lib.sh
-
-#if [ -d "$HOME/.pyenv" ];
-#then
-#	export PATH="$HOME/.pyenv/bin:$PATH"
-#	eval "$(pyenv init -)"
-#	eval "$(pyenv virtualenv-init -)"
-#fi
+# homedir_module pyenv.sh
 
 # start tmux in 256-color mode
 if [[ $TERM == *256col* ]]
@@ -58,7 +51,7 @@ fi
 alias ll='ls -lAhp'
 cd() { builtin cd "$@"; ll; }
 alias cd..='cd ../'
-mcd() { mkdir -p "$1" && cd "$1"; }
+mcd() { mkdir -p "$1" && builtin cd "$1"; }
 
 #   ---------------------------
 #   4.  SEARCHING
