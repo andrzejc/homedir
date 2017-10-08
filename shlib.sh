@@ -104,7 +104,7 @@ sh_assert_() {
     if [[ $# < 3 || $# > 4 ]]
     then
         local num=$(expr $# - 1)
-        shlog_warn "sh_assert: wrong number of params ($num: $@)"
+        shlog_warn "sh_assert: wrong number of params ($num: "$@")"
         return 1
     fi
 

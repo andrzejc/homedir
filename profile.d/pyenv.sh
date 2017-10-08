@@ -1,11 +1,11 @@
 
 setup_pyenv() {
-    if [ -d "$HOME/.pyenv" ];
-    then
+    [ -d "$HOME/.pyenv" ] && sh_which pyenv && {
         shpath_pre "$HOME/.pyenv/bin"
         eval "$(pyenv init -)"
-        eval "$(pyenv virtualenv-init -)"
-    fi
+        sh_which pyenv-virtualenv-init && eval "$(pyenv virtualenv-init -)"
+        return
+    } || return 0
 }
 
 setup_pyenv

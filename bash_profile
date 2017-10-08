@@ -40,7 +40,7 @@ homedir_module xterm-titlebar.sh
 homedir_module lessopen.sh
 homedir_module brew-overrides.sh
 homedir_module perl-local-lib.sh
-# homedir_module pyenv.sh
+homedir_module pyenv.sh
 
 # start tmux in 256-color mode
 if [[ $TERM == *256col* ]]
