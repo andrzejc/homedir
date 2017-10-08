@@ -90,6 +90,8 @@ shlog_error() { shlog_  ERROR  "$@"; }
 shlog_fatal() { shlog_  FATAL  "$@"; }
 shlog_info()  { shlog_ "INFO " "$@"; }
 shlog_info_() { shlog_ "INFO " "$@"; }
+shlog_trace() { shlog_  TRACE  "$@"; }
+
 
 SHLIB_ASSERT_ENABLED=${SHLIB_ASSERT_ENABLED:-0}
 
@@ -161,7 +163,7 @@ __shlib_path_join_one() {
     local how="$1"
     local var="$2"
     local dir="$3"
-    local var_val=$(shvar_get $var)
+    local var_val="$(shvar_get "${var}")"
 
     [[ ":${var_val}:" != *":${dir}:"* ]] && {
         case "${how}" in
@@ -174,7 +176,6 @@ __shlib_path_join_one() {
             return 1;;
         esac
         shvar_set "${var}" "${res}"
-        return
     } || return 0
 }
 
@@ -184,12 +185,12 @@ __shlib_path_join_one() {
 shpath_join() {
     local how="$1"
     local var="PATH"
-    if [ $# -gt 2 ]
+    shift
+    if [ $# -gt 1 ]
     then
-        var="$2"
+        var="$1"
         shift
     fi
-    shift
     for d in "$@"
     do
         __shlib_path_join_one "$how" "$var" "$d"

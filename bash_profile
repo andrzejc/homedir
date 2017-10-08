@@ -24,6 +24,7 @@ fi
 
 shpath_pre "$HOME/bin"
 shpath_app "$HOMEDIR/bin"
+export PATH
 
 export LESS=" -Rx4 "
 export PAGER="less"

@@ -1,18 +1,29 @@
 #!/usr/bin/env bash
 
-use_brew_opt_override() {
-	local name="$1"
+BREW_OPT_DIR=/usr/local/opt
 
-	shpath_pre "/usr/local/opt/$name/libexec/bin" || \
-	shpath_pre "/usr/local/opt/$name/bin" || \
-	shpath_pre "/usr/local/opt/$name/libexec"
-
-	shpath_pre  PKG_CONFIG_PATH "/usr/local/opt/$name/lib/pkgconfig"
-	return 0
+__brew_opt_path() {
+	local package="$1"
+	local path="$2"
+	echo "${BREW_OPT_DIR}/${package}/${path}"
 }
 
-use_brew_opt_override python
-use_brew_opt_override ccache
+brew_opt() {
+	local name="$1"
+	local dir="$2"
+	local how="$3"
+	local var
+	[ $# -gt 3 ] && var="$4" || var="PATH"
+	local path="$(__brew_opt_path "${name}" "${dir}")"
+	[ -d "${path}" ] && shpath_join "${how}" "${var}" "${path}"
+}
 
-# use_brew_opt_override curl
+setup_brew_overrides() {
+	brew_opt python2 libexec/bin before PATH
 
+	# this one should be last
+	brew_opt ccache libexec before PATH
+	export PATH
+}
+
+setup_brew_overrides
