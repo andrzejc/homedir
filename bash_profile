@@ -3,7 +3,9 @@
 
 __parent_dir() {
 	local d="$1"
-	[ -h "$d" ] && d=$(readlink "$d")
+	[[ "$d" == /* ]] || d="$HOME/$d"
+	[ -h "$d" ] && d="$(readlink "$d")"
+	[[ "$d" == /* ]] || d="$HOME/$d"
 	(cd "$(dirname "$d")" && pwd)
 }
 
