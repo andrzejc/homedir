@@ -53,9 +53,9 @@ run_vim_c_syntax_file() {
 
 run_git_prompt() {
 	# Install .git-prompt.sh into ~/
-	mkdir -p "$HOMEDIR/profile.d"
+	mkdir -p "$HOMEDIR/$HOMEDIR_MODULE_DIR"
 	curl https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh \
-		-LSso "$HOMEDIR/profile.d/git-prompt.sh"
+		-LSso "$HOMEDIR/$HOMEDIR_MODULE_DIR/git-prompt.sh"
 }
 
 run_tmux_tpm() {
