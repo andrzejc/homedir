@@ -29,8 +29,8 @@ HERE
 setup_brew_overrides() {
 	while read name dir how var
 	do
-		[ -n "${name}" ] && [ -n "${dir}" ] && [ -n "${how}" ] && [ -n "${var}" ] && \
-		brew_opt "${name}" "${dir}" "${how}" "${var}"
+		[ -n "${name}" ] && [ -n "${dir}" ] && [ -n "${how}" ] && \
+			[ -n "${var}" ] && brew_opt "${name}" "${dir}" "${how}" "${var}"
 	done <<< "${BREW_OVERRIDES}"
 }
 

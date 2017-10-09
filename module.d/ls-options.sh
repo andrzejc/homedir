@@ -2,7 +2,7 @@
 homedir_module ansi-colors.sh
 
 setup_ls_options() {
-	case $SHLIB_OS_VARIANT in
+	case "$HOMEDIR_OS_VARIANT" in
 		linux)
 			LS_COLOROPTS="--color=auto"
 			export LS_COLORS="\

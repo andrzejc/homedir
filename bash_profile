@@ -41,50 +41,7 @@ homedir_module lessopen.sh
 homedir_module brew-overrides.sh
 homedir_module perl-local-lib.sh
 homedir_module pyenv.sh
-
-# start tmux in 256-color mode
-if [[ $TERM == *256col* ]]
-then
-	alias tmux="tmux -2"
-fi
-
-alias ll='ls -lAhp'
-cd() { builtin cd "$@"; ll; }
-alias cd..='cd ../'
-mcd() { mkdir -p "$1" && builtin cd "$1"; }
-
-#   ---------------------------
-#   4.  SEARCHING
-#   ---------------------------
-
-alias numf='echo $(ls -1 | wc -l)'          # numf:     Count of non-hidden files in current dir
-ff () { find . -name "$@" ; }               # ff:       Find file under the current directory
-#ffs () { /usr/bin/find . -name "$@"'*' ; }  # ffs:      Find file whose name starts with a given string
-#ffe () { /usr/bin/find . -name '*'"$@" ; }  # ffe:      Find file whose name ends with a given string
-
-#   extract:  Extract most know archives with one command
-#   ---------------------------------------------------------
-extract () {
-	if [ -f "$1" ]
-	then
-		case $1 in
-		*.tar.bz2)   tar xjf $1     ;;
-		*.tar.gz)    tar xzf $1     ;;
-		*.bz2)       bunzip2 $1     ;;
-		*.rar)       unrar e $1     ;;
-		*.gz)        gunzip $1      ;;
-		*.tar)       tar xf $1      ;;
-		*.tbz2)      tar xjf $1     ;;
-		*.tgz)       tar xzf $1     ;;
-		*.zip)       unzip $1       ;;
-		*.Z)         uncompress $1  ;;
-		*.7z)        7z x $1        ;;
-		*)     echo "'$1' cannot be extracted via extract()" ;;
-		esac
-	else
-		echo "'$1' is not a valid file"
-	fi
-}
+homedir_module aliases.sh
 
 if [ -f "$HOMEDIR/bash_profile.$HOMEDIR_OS_VARIANT" ]
 then
