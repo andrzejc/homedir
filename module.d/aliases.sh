@@ -1,14 +1,17 @@
 # start tmux in 256-color mode
 [[ $TERM == *256col* ]] && alias tmux="tmux -2"
 
+# list almost all
 alias la='ls -A'
+# list in columns with type suffixes (/@ etc)
 alias l='ls -CF'
-alias ll='ls -lAh'
+# list: long, almost all (hidden files, no ./..)
+alias ll='ls -lA'
 alias grep='grep --color=auto'
 alias fgrep='fgrep --color=auto'
 alias egrep='egrep --color=auto'
 
-# Add an "alert" alias for long running commands.  Use like so:
+# "alert" alias for long running commands.  Use like so:
 #   sleep 10; alert
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
@@ -17,7 +20,6 @@ cd() { builtin cd "$@"; ll; }
 alias cd..='cd ../'
 
 mcd() { mkdir -p "$1" && builtin cd "$1"; }
-
 
 alias numf='echo $(ls -1 | wc -l)'          # numf:     Count of non-hidden files in current dir
 
