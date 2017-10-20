@@ -23,7 +23,7 @@ BREW_OVERRIDES="$(cat <<-HERE
 	python2 lib/pkgconfig after PKG_CONFIG_PATH
 
 	ccache libexec before PATH
-HERE
+	HERE
 )"
 
 setup_brew_overrides() {

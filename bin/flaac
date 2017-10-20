@@ -1,8 +1,89 @@
 #!/usr/bin/env bash
 set -e -o pipefail
 
-for i in *flac; do 
-	of="${i/.flac/.m4a}"
-	ffmpeg -i "${i}" -vn -acodec aac -b:a 192k -f mp4 -y "${of}"
-done
- 
+HOMEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
+source "${HOMEDIR}/shlib.sh"
+
+clean_log=success
+clean_orig=success
+
+find_ext() {
+	local codec="$1"
+	local format="$2"
+	case "${format}" in
+	mp4) echo m4a ;;
+
+	*)  case "${codec}" in
+		aac) echo m4a ;;
+
+		*)   echo "${format}" ;;
+		esac
+	esac
+}
+
+try_itunes_import() {
+	local file="$1"
+	local log="$2"
+	which osascripts 2> /dev/null && ({
+		osascript >"${log}" 2>&1 <<-EOF
+			tell application "iTunes"
+				launch
+				add "${file}"
+			end tell
+			EOF
+	} || return $?) # || log lack of osascript
+}
+
+check_opt() {
+	local opt="${1}"
+	local state="${2}"
+	local val="$(shvar_get "${opt}")"
+	[[ "${val}" == always ]] || [[ "${val}" == "${state}" ]]
+}
+
+recode_file() {
+	local file="${1}"
+	local codec="${2:-aac}"
+	local format="${3:-mp4}"
+	local bitrate="${4:-192k}"
+	local ext="$(shpath_get_ext "${file}")"
+	local base="${file%"${ext}"}"
+	local out_ext=".$(find_ext "${codec}" "${format}")"
+	local out="${base}${out_ext}"
+	local log="${base}.log"
+	if ffmpeg -i "${file}" -vn -acodec "${codec}" -b:a "${bitrate}" \
+		-f "${format}" -n -nostats -nostdin "${out}" >"${log}" 2>&1
+	then
+		echo "✅ ${file}->${out_ext}"
+		check_opt clean_log success && rm "${log}"
+		check_opt clean_orig success && rm "${file}"
+		# try_itunes_import "${out}" "${log}"
+	else
+		local res=$?
+		echo "❌ ${file}->${out_ext} (check .log)"
+		check_opt clean_log fail && rm "${log}"
+		check_opt clean_orig fail && rm "${file}"
+		return ${res}
+	fi
+}
+
+recode_all() {
+	local in="${1:-"$HOME/Music"}"
+	local codec="${2:-aac}"
+	local format="${3:-mp4}"
+	local bitrate="${4:-192k}"
+	local pattern="${5:-*.flac}"
+	if [ -d "$in" ]
+	then
+		local f
+		find "$in" -name "${pattern}" -exec printf '%s\0' '{}' \; | \
+			while IFS= read -r -d '' f
+		do 
+			recode_file "$f" "${codec}" "${format}" "${bitrate}" 
+		done
+	else
+		recode_file "$in" "${codec}" "${format}" "${bitrate}"
+	fi
+}
+
+recode_all .

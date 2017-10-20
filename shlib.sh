@@ -52,7 +52,7 @@ sherr_should_raise() {
 }
 
 # sherr_raise <level> <args...> - overridable error handler function
-#   invoked on
+# invoked on
 sherr_raise() {
 	local level="${1:-ERROR}"
 	exit -1
@@ -130,8 +130,6 @@ sh_assert_() {
 sh_assert()      { sh_assert_ 1 "$@"; }
 sh_assert_fail() { sh_assert_ 0 "$@"; }
 
-shpath_list() { shstr_join ":" "$@"; }
-
 # shvar_get <var> - get value of dynamic variable
 shvar_get() {
 	sh_assert $# = 1
@@ -151,6 +149,8 @@ shvar_name() {
 	local path="$1"
 	echo "${path}" | sed -e "s/[^_a-zA-Z0-9]/_/g"
 }
+
+shpath_list() { shstr_join ":" "$@"; }
 
 __shlib_path_join_one() {
 	sh_assert $# = 3
@@ -173,9 +173,8 @@ __shlib_path_join_one() {
 	} || return 0
 }
 
-# shpath_join <how> <var> <dir...> - append (how=after) or
-#   prepend(how=before) directory to path list variable var provided it's not
-#   included there yet
+# shpath_join <how> <var> <dir...> - append (how=after) or prepend (how=before)
+# directory to path list variable var provided it's not included there yet
 shpath_join() {
 	local how="$1"
 	local var="PATH"
@@ -193,6 +192,14 @@ shpath_join() {
 
 shpath_pre() { shpath_join before "$@"; }
 shpath_app() { shpath_join after  "$@"; }
+
+shpath_get_ext() {
+	for f in "$@" 
+	do
+		local base="${f##*/}"
+		[[ "${base}" == *.* ]] && echo ".${base##*.}" || echo ''
+	done
+}
 
 # which suppressing error messsages
 sh_which() { which "$@" 2> /dev/null; }

@@ -7,6 +7,10 @@ alias la='ls -A'
 alias l='ls -CF'
 # list: long, almost all (hidden files, no ./..)
 alias ll='ls -lA'
+# lr:  Full Recursive Directory Listing
+alias lr='ls -R | grep ":$" | sed -e '\''s/:$//'\'' -e '\''s/[^-][^\/]*\//--/g'\'' -e '\''s/^/   /'\'' -e '\''s/-/|/'\'' | less'
+ 
+
 alias grep='grep --color=auto'
 alias fgrep='fgrep --color=auto'
 alias egrep='egrep --color=auto'
@@ -44,3 +48,4 @@ extract() {
 	esac
 }
 
+zipf () { zip -r "$1".zip "$1" ; }          # zipf:         To create a ZIP archive of a folder
