@@ -8,30 +8,17 @@ clean_log=success
 clean_orig=success
 
 find_ext() {
-	local codec="$1"
-	local format="$2"
+	local format="$1"
+	local codec="$2"
 	case "${format}" in
-	mp4) echo m4a ;;
+	mp4) echo .m4a ;;
 
 	*)  case "${codec}" in
-		aac) echo m4a ;;
+		aac) echo .m4a ;;
 
-		*)   echo "${format}" ;;
+		*)   echo ".${format}" ;;
 		esac
 	esac
-}
-
-try_itunes_import() {
-	local file="$1"
-	local log="$2"
-	which osascripts 2> /dev/null && ({
-		osascript >"${log}" 2>&1 <<-EOF
-			tell application "iTunes"
-				launch
-				add "${file}"
-			end tell
-			EOF
-	} || return $?) # || log lack of osascript
 }
 
 check_opt() {
@@ -41,37 +28,93 @@ check_opt() {
 	[[ "${val}" == always ]] || [[ "${val}" == "${state}" ]]
 }
 
-recode_file() {
+recode_impl_ffmpeg() {
 	local file="${1}"
-	local codec="${2:-aac}"
-	local format="${3:-mp4}"
-	local bitrate="${4:-192k}"
-	local ext="$(shpath_get_ext "${file}")"
-	local base="${file%"${ext}"}"
-	local out_ext=".$(find_ext "${codec}" "${format}")"
-	local out="${base}${out_ext}"
-	local log="${base}.log"
-	if ffmpeg -i "${file}" -vn -acodec "${codec}" -b:a "${bitrate}" \
-		-f "${format}" -n -nostats -nostdin "${out}" >"${log}" 2>&1
+	local out="${2}"
+	local log="${3}"
+	local format="${4}"
+	local bitrate="${5}"
+	local codec="${6}"
+	ffmpeg -i "${file}" -vn -acodec "${codec}" -b:a "${bitrate}" -f "${format}" -n -nostats -nostdin "${out}" >>"${log}" 2>&1
+}
+
+recode_impl() {
+	echo "ffmpeg"
+}
+
+do_recode() {
+	local in="${1}"
+	local out="${2}"
+	local log="${3}"
+	local format="${4:-mp4}"
+	local bitrate="${5:-192k}"
+	local codec="${6:-aac}"
+	local out_ext="$(shpath_get_ext "${out}")"
+	local impl="$(recode_impl "${format}" "${codec}")"
+	if "recode_impl_${impl}" "${in}" "${out}" "${log}" "${format}" "${bitrate}" "${codec}"
 	then
-		echo "✅ ${file}->${out_ext}"
-		check_opt clean_log success && rm "${log}"
-		check_opt clean_orig success && rm "${file}"
-		# try_itunes_import "${out}" "${log}"
+		echo "✅  ${in}->${out_ext}"
+		check_opt clean_orig success && rm "${in}"
 	else
 		local res=$?
-		echo "❌ ${file}->${out_ext} (check .log)"
+		echo "❌  ${in}->${out_ext} (check .log)"
 		check_opt clean_log fail && rm "${log}"
-		check_opt clean_orig fail && rm "${file}"
+		check_opt clean_orig fail && rm "${in}"
 		return ${res}
 	fi
 }
 
+abspath() {
+	for f in "$@"
+	do
+		echo "$(cd "$(dirname "$f")"; pwd)/$(basename "$f")"
+	done
+}
+
+do_itunes_import() {
+	local file="$1"
+	local log="$2"
+	if ! sh_which osascript >/dev/null
+	then
+		shlog_warn "do_itunes_import(): can't locate osascript"
+		return 1
+	fi
+	local af="$(abspath "${file}")"
+	read script <<-HERE
+tell application "iTunes" to add POSIX file "${af}"
+HERE
+	if osascript -e "${script}" >>"${log}" 2>&1
+	then
+		echo "✅  ${file}->iTunes"
+		check_opt clean_log success && rm "${log}"
+	else
+		local res=$?
+		echo "❌  ${file}->iTunes (check .log)"
+		check_opt clean_log fail && rm "${log}"
+		return ${res}
+	fi
+}
+
+recode_pipeline() {
+	local in="${1}"
+	local format="${2:-mp4}"
+	local bitrate="${3:-192k}"
+	local codec="${4:-aac}"
+	local ext="$(shpath_get_ext "${in}")"
+	local base="${in%"${ext}"}"
+	local out_ext="$(find_ext "${format}" "${codec}")"
+	local out="${base}${out_ext}"
+	local log="${base}.log"
+
+	do_recode "${in}" "${out}" "${log}" "${format}" "${bitrate}" "${codec}" && \
+		do_itunes_import "${out}" "${log}"
+}
+
 recode_all() {
-	local in="${1:-"$HOME/Music"}"
-	local codec="${2:-aac}"
-	local format="${3:-mp4}"
-	local bitrate="${4:-192k}"
+	local in="${1}"
+	local format="${2:-mp4}"
+	local bitrate="${3:-192k}"
+	local codec="${4:-aac}"
 	local pattern="${5:-*.flac}"
 	if [ -d "$in" ]
 	then
@@ -79,10 +122,10 @@ recode_all() {
 		find "$in" -name "${pattern}" -exec printf '%s\0' '{}' \; | \
 			while IFS= read -r -d '' f
 		do 
-			recode_file "$f" "${codec}" "${format}" "${bitrate}" 
+			recode_pipeline "$f" "${format}" "${bitrate}" "${codec}" 
 		done
 	else
-		recode_file "$in" "${codec}" "${format}" "${bitrate}"
+		recode_pipeline "$in" "${format}" "${bitrate}" "${codec}"
 	fi
 }
 
