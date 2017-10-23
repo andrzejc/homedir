@@ -1,0 +1,5 @@
+
+find_program(osascript_EXECUTABLE osascript DOC "osascript executable path")
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(osascript REQUIRED_VARS osascript_EXECUTABLE)
+mark_as_advanced(osascript_EXECUTABLE)
