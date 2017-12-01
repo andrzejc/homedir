@@ -58,6 +58,14 @@ run_git_prompt() {
 		-LSso "$HOMEDIR/module.d/git-prompt.sh"
 }
 
+run_git_completion() {
+	# Install .git-prompt.sh into ~/
+	mkdir -p "$HOMEDIR/module.d"
+	curl https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash \
+		-LSso "$HOMEDIR/module.d/git-completion.sh"
+}
+
+
 run_tmux_tpm() {
 	# Install tmux plugin manager
 	git_clone_or_pull \
@@ -114,6 +122,7 @@ case "${1:-all}" in
 		run_vim_bundles
 		run_vim_c_syntax_file
 		run_git_prompt
+		run_git_completion
 		run_tmux_tpm
 		run_symlinks
 		run_clean_obsolete_files

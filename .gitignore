@@ -1,4 +1,5 @@
 .DS_Store
 git-prompt.sh
+git-completion.sh
 
 .vscode
