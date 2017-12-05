@@ -42,6 +42,7 @@ homedir_module brew-overrides.sh
 homedir_module perl-local-lib.sh
 homedir_module pyenv.sh
 homedir_module aliases.sh
+homedir_module git-completion.sh
 
 if [ -f "$HOMEDIR/bash_profile.$HOMEDIR_OS_VARIANT" ]
 then
