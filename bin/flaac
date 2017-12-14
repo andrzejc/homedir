@@ -52,14 +52,13 @@ run_config=
 while [ $# -gt 0 ]
 do
 	case "$1" in
-	--config)    run_config=1 ;;
-	--generator) shift; CMAKE_GENERATOR="$1" ;;
-	--help) # TODO
+	--config)    run_config=1; shift; ;;
+	--generator) shift; CMAKE_GENERATOR="$1"; shift ;;
+	--help) shift; # TODO 
 		;;
-	--dir)       shift; flaac_dir="$1" ;;
-	*)           dir="$1" ;;
+	--dir)       shift; flaac_dir="$1"; shift; ;;
+	*)           dir="$1"; shift; ;;
 	esac
-	shift
 done
 
 dir="${dir:-.}"
