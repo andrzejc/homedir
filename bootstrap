@@ -9,7 +9,7 @@ HOMEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$HOMEDIR/shlib.sh"
 
 git_clone_or_pull() {
-	local url="$1"
+	local repo="$1"
 	local out_dir="$2"
 	if [ -d "$out_dir" ]
 	then

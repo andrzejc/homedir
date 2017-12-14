@@ -165,12 +165,14 @@ function(export_vars res_var)
 	set("${res_var}" ${res} PARENT_SCOPE)
 endfunction()
 
+set(MEDIA_LIBRARY_MAINTENANCE_MODULE_PATH "${CMAKE_CURRENT_LIST_FILE}")
+
 function(create_job target job vars depends comment)
 	add_custom_target("${target}"
 		COMMAND "${CMAKE_COMMAND}"
-			"-DMEDIA_LIBRARY_MAINTENANCE_JOB:STRING=${job}"
+			"-DMEDIA_LIBRARY_MAINTENANCE_JOB=${job}"
 			${vars}
-			-P "$ENV{HOMEDIR}/cmake/MediaLibraryMaintenance.cmake"
+			-P "${MEDIA_LIBRARY_MAINTENANCE_MODULE_PATH}"
 		DEPENDS ${depends}
 		COMMENT "${comment}"
 		VERBATIM)
@@ -209,8 +211,7 @@ function(recode_pipeline in)
 
 	set(pipeline_target "pipeline_${target_suffix}")
 	add_custom_target("${pipeline_target}" ALL
-		COMMENT "Executing recoding pipeline for target '${target}'"
-		SOURCES "${in}")
+		COMMENT "Executing recoding pipeline for target '${target}'")
 
 	set(recode_target "recode_${target_suffix}")
 	recode_impl_ffmpeg("${recode_target}" "${in}" "${out}" "${log}")
@@ -229,7 +230,7 @@ function(recode_all in)
 		file(GLOB_RECURSE files RELATIVE "${in}" ${Recode_Pattern})
 		foreach(f IN LISTS files)
 			recode_pipeline("${in}/${f}")
-		endforeach(f IN LISTS files)
+		endforeach(f)
 	else()
 		recode_pipeline("${in}")
 	endif()
