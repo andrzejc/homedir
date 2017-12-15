@@ -8,7 +8,7 @@ function(path_suffix_new pth res)
 	path_suffix("${pth}" res_loc)
 	while(EXISTS "${res_loc}")
 		path_suffix("${pth}" res_loc)
-	endwhile()§
+	endwhile()
 	set("${res}" "${res_loc}" PARENT_SCOPE)
 endfunction()
 
