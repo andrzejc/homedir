@@ -1,3 +1,6 @@
+# FILE GLOB_RECURSE calls should not follow symlinks by default
+cmake_policy(SET CMP0009 NEW)
+
 # write suffix of filename pth into variable named res
 function(path_suffix pth res)
 	string(RANDOM LENGTH 16 suffix)
@@ -139,6 +142,8 @@ elseif("${MEDIA_LIBRARY_MAINTENANCE_JOB}" STREQUAL "iTunes_import")
 	endif()
 	return()
 elseif("${MEDIA_LIBRARY_MAINTENANCE_JOB}" STREQUAL "glob_dir")
+	# FILE GLOB_RECURSE calls should not follow symlinks by default
+	cmake_policy(SET CMP0009 NEW)
 	log_debug("Globbing '${Find_Dir}' for pattern '${Find_Pattern}'")
 	file(GLOB_RECURSE files RELATIVE "${Find_Dir}" ${Find_Pattern})
 	if(DEFINED Output_File AND EXISTS "${Output_File}")
@@ -151,6 +156,7 @@ elseif("${MEDIA_LIBRARY_MAINTENANCE_JOB}" STREQUAL "glob_dir")
 			message(STATUS "${file}")
 		endif()
 	endforeach(file)
+	return()
 endif()
 
 function(media_file_ext ext_var format codec)
