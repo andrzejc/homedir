@@ -6,7 +6,8 @@ function(find_iTunes)
 			execute_process(COMMAND "${osascript_EXECUTABLE}" -e "version of app \"iTunes\""
 				RESULT_VARIABLE res
 				OUTPUT_VARIABLE out
-				ERROR_VARIABLE err)
+				ERROR_VARIABLE err
+				OUTPUT_STRIP_TRAILING_WHITESPACE)
 		else()
 			set(res 1)
 		endif()

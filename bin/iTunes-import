@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+media-library-maintenance --mode iTunes_import_all "$@"
