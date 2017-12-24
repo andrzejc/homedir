@@ -61,11 +61,13 @@ function(stamp_file stamp)
 endfunction(stamp_file)
 
 function(force_reconfigure)
-	# TOP_LEVEL_CMAKE is the caller of add_media_library_maintenance_targets()
-	file(READ "${TOP_LEVEL_CMAKE}" code)
+	# touch CMake cache to force reconfigure
+	# CMAKE_CACHE_FILE is set by add_media_library_maintenance_targets()
+	file(READ "${CMAKE_CACHE_FILE}" code)
 	string(RANDOM LENGTH 8 token)
-	string(REGEX REPLACE "##T........\n" "##T${token}\n" code "${code}")
-	file(WRITE "${TOP_LEVEL_CMAKE}" "${code}")		
+	string(REGEX REPLACE "_MEDIA_LIBRARY_MAINTENANCE_TOKEN:INTERNAL=T........\n"
+		"_MEDIA_LIBRARY_MAINTENANCE_TOKEN:INTERNAL=T${token}\n" code "${code}")
+	file(WRITE "${CMAKE_CACHE_FILE}" "${code}")
 endfunction(force_reconfigure)
 
 if(MEDIA_LIBRARY_MAINTENANCE_JOB STREQUAL ffmpeg)
@@ -246,7 +248,7 @@ endfunction(create_job_target)
 
 function(create_job_output output job dir vars depends comment)
 	job_params(params "${job}" "${dir}" "${vars}" "${depends}" "${comment}")
-	add_custom_command(OUTPUT "${output}"  ${params})
+	add_custom_command(OUTPUT "${output}" ${params})
 endfunction(create_job_output)
 
 function(add_recode_ffmpeg in out)
@@ -287,8 +289,8 @@ function(add_recode_file out_var in)
 	get_filename_component(base_abs "${base}" ABSOLUTE)
 	file(RELATIVE_PATH base_rel "${CMAKE_SOURCE_DIR}" "${base_abs}")
 	media_file_ext(out_ext "${Audio_Format}" "${Audio_Codec}")
-	set(in     "${base_abs}${in_ext}")
-	set(out    "${base_abs}${out_ext}")
+	set(in  "${base_abs}${in_ext}")
+	set(out "${base_abs}${out_ext}")
 	add_recode_ffmpeg("${in}" "${out}")
 	set("${out_var}" "${out}" PARENT_SCOPE)
 endfunction(add_recode_file)
@@ -300,7 +302,7 @@ function(add_create_stamp stamp depends)
 endfunction(add_create_stamp)
 
 function(add_check_reconfigure target stamp index)
-	export_vars(vars stamp index TOP_LEVEL_CMAKE log)
+	export_vars(vars stamp index CMAKE_CACHE_FILE log)
 	create_job_target("${target}" check_reconfigure "" "${vars}" "${stamp};${index}"
 		"Checking if index '${index}' was updated...")
 endfunction(add_check_reconfigure)
@@ -309,7 +311,7 @@ function(add_force_reconfigure target before after)
 	add_custom_target("${target}" 
 		COMMAND "${CMAKE_COMMAND}" 
 			"-DMEDIA_LIBRARY_MAINTENANCE_JOB=force_reconfigure"
-			"-DTOP_LEVEL_CMAKE=${TOP_LEVEL_CMAKE}"
+			"-DCMAKE_CACHE_FILE=${CMAKE_CACHE_FILE}"
 			-P "${MEDIA_LIBRARY_MAINTENANCE_MODULE_PATH}"
 		COMMENT "Forcing reconfigure."
 		VERBATIM)
@@ -375,17 +377,11 @@ set(IMPORT_STAMP "${CMAKE_BINARY_DIR}/import.stamp")
 function(add_index_target)
 	set(Import_Pattern "*.mp3;*.m4a;*.alac" CACHE STRING "index: File patterns to include (separate glob patterns with semicolons)")
 	set(log "${CMAKE_BINARY_DIR}/index.log")
-
 	log_info("index: available")
-	# option(Recode "index: recode files prior indexing" "${iTunes_FOUND}")
-
 	add_glob_job("${IMPORT_INDEX}" "${CMAKE_SOURCE_DIR}" "${Import_Pattern}")
 	add_custom_target(index 
 		DEPENDS "${IMPORT_INDEX}"
 		COMMENT "Indexing files to import in '${CMAKE_SOURCE_DIR}'...")
-	# if(TARGET recode AND Recode)
-	# 	add_dependencies(index recode)
-	# endif()
 endfunction(add_index_target)
 
 function(add_iTunes_import stamp file)
@@ -453,12 +449,12 @@ function(add_media_library_maintenance_targets)
 	find_package(osascript)
 	find_package(iTunes)
 
-	set(TOP_LEVEL_CMAKE "${CMAKE_CURRENT_LIST_FILE}")
-	set(TOP_LEVEL_CMAKE "${TOP_LEVEL_CMAKE}" PARENT_SCOPE)
+	set(CMAKE_CACHE_FILE "${CMAKE_CACHEFILE_DIR}/CMakeCache.txt")
+	set(CMAKE_CACHE_FILE "${CMAKE_CACHE_FILE}" PARENT_SCOPE)
+	set(_MEDIA_LIBRARY_MAINTENANCE_TOKEN "T00000000" CACHE INTERNAL "")
 
 	set(Log_Files_Cleanup Never CACHE STRING "Whether to clean log files (Success, Always, Never)")
 
-	option(Recode OFF "")
 	if(ffmpeg_FOUND)
 		add_recode_target()
 	endif(ffmpeg_FOUND)

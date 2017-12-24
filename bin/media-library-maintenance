@@ -5,7 +5,6 @@ set -e -o pipefail
 
 HOMEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
 CMAKE_COMMAND="${CMAKE_COMMAND:-cmake}"
-MEDIA_LIBRARY_MAINTENANCE_MODE="${MEDIA_LIBRARY_MAINTENANCE_MODE:-recode_all}"
 
 create_work_dir() {
 	"${CMAKE_COMMAND}" -E make_directory "${work_dir}"
@@ -33,7 +32,6 @@ generate_cmake_lists() {
 			include(MediaLibraryMaintenance)
 			mark_as_advanced(FORCE CMAKE_INSTALL_PREFIX CMAKE_MODULE_PATH CMAKE_OSX_ARCHITECTURES CMAKE_OSX_DEPLOYMENT_TARGET CMAKE_OSX_SYSROOT)
 			add_media_library_maintenance_targets()
-			##T00000000
 			EOF
 	}
 	ln -sf "${cmake_lists_real}" "${cmake_lists_target}"
@@ -68,6 +66,7 @@ do
 	--generator) shift; generator="$1"; shift ;;
     --mode)      shift; mode="$1"; shift ;;
 	--work-dir)  shift; work_dir="$1"; shift; ;;
+	--force)     shift; force=1; ;;
 	--help)      shift; # TODO 
 		;;
 	*)           dir="$1"; shift; ;;
@@ -78,16 +77,24 @@ mode="${mode:-index}"
 dir="${dir:-.}"
 work_dir="${work_dir:-"${dir}"/.mlm}"
 generator="${generator:-}"
+force="${force:-0}"
 gen_cmd=
 
 create_work_dir
 set_generator "${generator}"
 generate_cmake_lists
+
+if [ "${mode}" == index ] && [ "${force}" == 1 ]
+then
+	rm -f "${work_dir}"/import.index
+fi
+
 if [ "${run_config}" == 1 ]
 then
 	cmake_ccmake
 else
-	cmake_generate && cmake_build "${mode}" 
+	cmake_generate
+	cmake_build "${mode}"
 	if [ "${mode}" != index ]
 	then
 		# cmake_generate &&

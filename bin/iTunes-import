@@ -14,7 +14,7 @@ function check_missing() {
 }
 
 function check_prerequisites() {
-    local missing="$(check_missing cmake ninja python)"
+    local missing="$(check_missing "${@}")"
     if [ -z "${missing}" ]
     then
         echo "Prerequisites missing: ${missing}; install using brew (https://brew.sh/)" >&2
@@ -22,7 +22,7 @@ function check_prerequisites() {
     fi
 }
 
-check_prerequisites
+check_prerequisites cmake ninja python
 
 function rel_path() {
     local target="$1"
@@ -44,4 +44,4 @@ function copy_index() {
 }
 
 copy_index
-media-library-maintenance --generator Ninja --mode iTunes_import --work-dir "${WORK_DIR}" "$@"
+media-library-maintenance --generator Ninja --mode iTunes_import --work-dir "${WORK_DIR}" "${@}"
