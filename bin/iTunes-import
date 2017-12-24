@@ -35,17 +35,13 @@ SOURCE_REL="$(rel_path "${SOURCE_DIR}")"
 WORK_DIR="${HOME}/.mlm/${SOURCE_REL}"
 SOURCE_INDEX="${SOURCE_DIR}/.mlm/import.index"
 
-function setup_work_dir() {
-    mkdir -p "${WORK_DIR}"
-}
-
 function copy_index() {
     if [ -r "${SOURCE_INDEX}" ]
     then
+        mkdir -p "${WORK_DIR}"
         cmake -E copy_if_different "${SOURCE_INDEX}" "${WORK_DIR}"
     fi
 }
 
-setup_work_dir
 copy_index
-media-library-maintenance --generator Ninja --mode iTunes_import_all --work-dir "${WORK_DIR}" "$@"
+media-library-maintenance --generator Ninja --mode iTunes_import --work-dir "${WORK_DIR}" "$@"

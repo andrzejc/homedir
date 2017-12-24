@@ -60,14 +60,12 @@ function(stamp_file stamp)
 	file(WRITE "${stamp}" "${time}")
 endfunction(stamp_file)
 
-set(EVAL_TEMP_FILE "${CMAKE_BINARY_DIR}/_eval_temp.cmake")
-
 function(force_reconfigure)
-	# EVAL_TEMP_FILE is used by eval() which is used in CMakeLists.txt
-	file(READ "${EVAL_TEMP_FILE}" eval_temp)
+	# TOP_LEVEL_CMAKE is the caller of add_media_library_maintenance_targets()
+	file(READ "${TOP_LEVEL_CMAKE}" code)
 	string(RANDOM LENGTH 8 token)
-	string(REGEX REPLACE "##T........\n" "##T${token}\n" eval_temp "${eval_temp}")
-	file(WRITE "${EVAL_TEMP_FILE}" "${eval_temp}")		
+	string(REGEX REPLACE "##T........\n" "##T${token}\n" code "${code}")
+	file(WRITE "${TOP_LEVEL_CMAKE}" "${code}")		
 endfunction(force_reconfigure)
 
 if(MEDIA_LIBRARY_MAINTENANCE_JOB STREQUAL ffmpeg)
@@ -183,7 +181,7 @@ elseif("${MEDIA_LIBRARY_MAINTENANCE_JOB}" STREQUAL "create_stamp")
 	stamp_file("${stamp}")
 	return()
 elseif("${MEDIA_LIBRARY_MAINTENANCE_JOB}" STREQUAL "check_reconfigure")
-	if("${depends}" IS_NEWER_THAN "${stamp}")
+	if("${index}" IS_NEWER_THAN "${stamp}")
 		log_debug("Stamp '${stamp}' is obsolete, forcing reconfigure on next build.")
 		force_reconfigure()
 	endif()
@@ -270,8 +268,6 @@ function(split_base_ext base_var ext_var in)
 	set(${ext_var} "${in_ext}" PARENT_SCOPE)
 endfunction(split_base_ext)
 
-set(Log_Files_Cleanup Success CACHE STRING "Whether to clean log files after recode (Success, Always, Never)")
-
 function(add_glob_job out dir pattern)
 	export_vars(vars pattern out log)
 	create_job_output("${out}" glob_dir "${dir}" "${vars}" "" 
@@ -303,47 +299,50 @@ function(add_create_stamp stamp depends)
 		"Stamping output '${stamp}'")
 endfunction(add_create_stamp)
 
-function(add_check_reconfigure target stamp depends)
-	export_vars(vars stamp depends log)
-	create_job_target("${target}" check_reconfigure "" "${vars}" "${stamp};${depends}"
-		"Checking freshness of '${stamp}'")
+function(add_check_reconfigure target stamp index)
+	export_vars(vars stamp index TOP_LEVEL_CMAKE log)
+	create_job_target("${target}" check_reconfigure "" "${vars}" "${stamp};${index}"
+		"Checking if index '${index}' was updated...")
 endfunction(add_check_reconfigure)
+
+function(add_force_reconfigure target before after)
+	add_custom_target("${target}" 
+		COMMAND "${CMAKE_COMMAND}" 
+			"-DMEDIA_LIBRARY_MAINTENANCE_JOB=force_reconfigure"
+			"-DTOP_LEVEL_CMAKE=${TOP_LEVEL_CMAKE}"
+			-P "${MEDIA_LIBRARY_MAINTENANCE_MODULE_PATH}"
+		COMMENT "Forcing reconfigure."
+		VERBATIM)
+	add_dependencies("${before}" "${target}")
+	add_dependencies("${target}" "${after}")
+endfunction(add_force_reconfigure)
 
 set(RECODE_INDEX "${CMAKE_BINARY_DIR}/recode.index")
 set(RECODE_STAMP "${CMAKE_BINARY_DIR}/recode.stamp")
 
-set(FORCE_RECONFIGURE_COMMAND COMMAND "${CMAKE_COMMAND}" 
-	"-DMEDIA_LIBRARY_MAINTENANCE_JOB=force_reconfigure"
-	-P "${MEDIA_LIBRARY_MAINTENANCE_MODULE_PATH}")
-
-function(recode_all)
-	find_package(ffmpeg REQUIRED)
-	find_package(osascript)
-	find_package(iTunes)
-
-	set(iTunes_Import "${iTunes_FOUND}" CACHE BOOL "Import recoded files to iTunes?")
-	set(Existing_Files Skip_Warn CACHE STRING "How to treat existing files (Overwrite_Backup, Overwrite_Delete, Skip_Silent, Skip_Warn, Error)")
-	set(Original_Cleanup Never CACHE STRING "Whether to clean original input files after recode (Success, Always, Never)")
-	set(Audio_Format mp4 CACHE STRING "Format (container) to encode to")
-	set(Audio_Codec libfdk_aac CACHE STRING "Audio codec to encode to")
-	set(Audio_Bitrate 192k CACHE STRING "Audio bitrate to encode to")
-	set(Recode_Pattern "*.flac;*.ape;*.ogg;*.oga" CACHE STRING "File patterns to recode (separate glob patterns with semicolons)")
+function(add_recode_target)
+	set(iTunes_Import "${iTunes_FOUND}" CACHE BOOL "recode: Import recoded files to iTunes?")
+	set(Existing_Files Skip_Warn CACHE STRING "recode: How to treat existing files (Overwrite_Backup, Overwrite_Delete, Skip_Silent, Skip_Warn, Error)")
+	set(Original_Cleanup Never CACHE STRING "recode: Whether to clean original input files after recode (Success, Always, Never)")
+	set(Audio_Format mp4 CACHE STRING "recode: Format (container) to encode to")
+	set(Audio_Codec libfdk_aac CACHE STRING "recode: Audio codec to encode to")
+	set(Audio_Bitrate 192k CACHE STRING "recode: Audio bitrate to encode to")
+	set(Recode_Pattern "*.flac;*.ape;*.ogg;*.oga" CACHE STRING "recode: File patterns to include (separate glob patterns with semicolons)")
 	set(log "${CMAKE_BINARY_DIR}/recode.log")
 
 	if(NOT EXISTS "${RECODE_INDEX}")
-		log_info("Index missing, creating indexing target.")
 		add_glob_job("${RECODE_INDEX}" "${CMAKE_SOURCE_DIR}" "${Recode_Pattern}")
 		add_custom_target(recode_index 
 			DEPENDS "${RECODE_INDEX}"
 			COMMENT "Indexing..."
 			VERBATIM)
-		add_custom_target(recode_all ALL
-			${FORCE_RECONFIGURE_COMMAND}
-			COMMENT "Indexing complete, forcing reconfigure."
+		add_custom_target(recode
+			COMMENT "Indexing complete."
 			VERBATIM)
-		add_dependencies(recode_all recode_index)
+		add_force_reconfigure(recode_force_reconfigure recode recode_index)
+		add_dependencies(recode recode_index)
+		log_info("recode: available, created indexing target")
 	else()
-		log_info("Creating targets from index...")
 		read_lines(files "${RECODE_INDEX}")
 		set(out_files)
 		foreach(f IN LISTS files)
@@ -360,20 +359,40 @@ function(recode_all)
 			COMMENT "Stamping..."
 			VERBATIM)
 		add_dependencies(recode_stamp recode_files)
-		add_custom_target(recode_all ALL
-			COMMAND ${FORCE_RECONFIGURE_COMMAND}
+		add_custom_target(recode
 			COMMAND "${CMAKE_COMMAND}" -E remove -f "${RECODE_INDEX}"
 			COMMENT "Recoding complete, removing obsolete index."
 			VERBATIM)
-		add_dependencies(recode_all recode_stamp)	
+		add_force_reconfigure(recode_force_reconfigure recode recode_stamp)
+		add_dependencies(recode recode_stamp)
+		log_info("recode: available, created converters from index")
 	endif()
-endfunction(recode_all)
+endfunction(add_recode_target)
+
+set(IMPORT_INDEX "${CMAKE_BINARY_DIR}/import.index")
+set(IMPORT_STAMP "${CMAKE_BINARY_DIR}/import.stamp")
+
+function(add_index_target)
+	set(Import_Pattern "*.mp3;*.m4a;*.alac" CACHE STRING "index: File patterns to include (separate glob patterns with semicolons)")
+	set(log "${CMAKE_BINARY_DIR}/index.log")
+
+	log_info("index: available")
+	# option(Recode "index: recode files prior indexing" "${iTunes_FOUND}")
+
+	add_glob_job("${IMPORT_INDEX}" "${CMAKE_SOURCE_DIR}" "${Import_Pattern}")
+	add_custom_target(index 
+		DEPENDS "${IMPORT_INDEX}"
+		COMMENT "Indexing files to import in '${CMAKE_SOURCE_DIR}'...")
+	# if(TARGET recode AND Recode)
+	# 	add_dependencies(index recode)
+	# endif()
+endfunction(add_index_target)
 
 function(add_iTunes_import stamp file)
 	export_vars(vars stamp file log osascript_EXECUTABLE)
 	file(RELATIVE_PATH file_rel "${CMAKE_SOURCE_DIR}" "${file}")
 	create_job_output("${stamp}" iTunes_import "" "${vars}" "${file}" 
-		"Importing '${file_rel}' to iTunes Library")
+		"Importing '${file_rel}' to iTunes library")
 endfunction(add_iTunes_import)
 
 function(iTunes_import_file stamp_var in)
@@ -388,42 +407,21 @@ function(iTunes_import_file stamp_var in)
 	set("${stamp_var}" "${stamp}" PARENT_SCOPE)
 endfunction(iTunes_import_file)
 
-set(IMPORT_INDEX "${CMAKE_BINARY_DIR}/import.index")
-set(IMPORT_STAMP "${CMAKE_BINARY_DIR}/import.stamp")
-set(Import_Pattern "*.mp3;*.m4a;*.alac" CACHE STRING "File patterns to import to index (separate glob patterns with semicolons)")
-
-function(index_all)
-	set(log     "${CMAKE_BINARY_DIR}/index.log")
-	log_info("Creating library indexing target...")
-	add_glob_job("${IMPORT_INDEX}" "${CMAKE_SOURCE_DIR}" "${Import_Pattern}")
-	add_custom_target(index_all ALL 
-		DEPENDS "${IMPORT_INDEX}"
-		COMMENT "Indexing files to import in '${CMAKE_SOURCE_DIR}'...")
-	if(TARGET recode_all)
-		# set ordering
-		add_dependencies(index_all recode_all)
-	endif()
-endfunction(index_all)
-
-function(iTunes_import_all)
-	find_package(osascript REQUIRED)
-	find_package(iTunes REQUIRED)
-
-	set(Ignore_Pattern "^!WRZUTNIA/" CACHE STRING "Regex pattern to ignore specific files")
+function(add_iTunes_import_target)
+	set(Ignore_Pattern "^!WRZUTNIA/" CACHE STRING "iTunes import: regex pattern to ignore specific files")
 	set(log "${CMAKE_BINARY_DIR}/iTunes_import.log")
 
 	if(NOT EXISTS "${IMPORT_INDEX}")
-		index_all()
-		add_custom_target(iTunes_import_all ALL 
-			${FORCE_RECONFIGURE_COMMAND}
+		add_custom_target(iTunes_import 
 			DEPENDS "${IMPORT_INDEX}"
-			COMMENT "Indexing complete, forcing reconfigure."
+			COMMENT "Indexing complete."
 			VERBATIM)
-		add_dependencies(iTunes_import_all index_all)
+		add_dependencies(iTunes_import index)
+		add_force_reconfigure(iTunes_import_force_reconfigure iTunes_import index)
+		log_info("iTunes_import: available, created indexing target")
 	else()
 		if("${IMPORT_INDEX}" IS_NEWER_THAN "${IMPORT_STAMP}")
 			read_lines(files "${IMPORT_INDEX}")
-			log_info("Creating import targets from index...")
 			set(stamps)
 			foreach(f IN LISTS files)
 				if(f MATCHES "${Ignore_Pattern}")
@@ -435,21 +433,39 @@ function(iTunes_import_all)
 			endforeach(f)
 			add_custom_target(iTunes_stamp_files DEPENDS "${stamp}" COMMENT "Importing...")
 			add_create_stamp("${IMPORT_STAMP}" "${IMPORT_INDEX};${stamps}")
-			add_custom_target(iTunes_stamp_import DEPENDS "${IMPORT_STAMP}" COMMENT "Stamping...")
-			add_dependencies(iTunes_stamp_import iTunes_stamp_files)
+			add_custom_target(iTunes_stamp DEPENDS "${IMPORT_STAMP}" COMMENT "Stamping...")
+			add_dependencies(iTunes_stamp iTunes_stamp_files)
+			log_info("iTunes_import: available, created importers from index")
+		else()
+			log_info("iTunes_import: available, created index checker")
 		endif() 
-		add_check_reconfigure(iTunes_check_stamp "${IMPORT_STAMP}" "${IMPORT_INDEX}")
-		if(TARGET iTunes_stamp_import)
-			add_dependencies(iTunes_check_stamp iTunes_stamp_import)
+		add_check_reconfigure(iTunes_check_index_updated "${IMPORT_STAMP}" "${IMPORT_INDEX}")
+		if(TARGET iTunes_stamp)
+			add_dependencies(iTunes_check_index_updated iTunes_stamp)
 		endif()
-		add_custom_target(iTunes_import_all ALL)
-		add_dependencies(iTunes_import_all iTunes_check_stamp)
+		add_custom_target(iTunes_import)
+		add_dependencies(iTunes_import iTunes_check_index_updated)
 	endif()
-endfunction(iTunes_import_all)
+endfunction(add_iTunes_import_target)
 
-function(eval code)
-	string(RANDOM LENGTH 8 token)
-	file(WRITE "${EVAL_TEMP_FILE}" "${code}\n##T${token}\n")
-	# file(WRITE "${EVAL_TEMP_FILE}" "${code}\n##T${token}\n")
-  	include("${EVAL_TEMP_FILE}")
-endfunction(eval)	
+function(add_media_library_maintenance_targets)
+	find_package(ffmpeg)
+	find_package(osascript)
+	find_package(iTunes)
+
+	set(TOP_LEVEL_CMAKE "${CMAKE_CURRENT_LIST_FILE}")
+	set(TOP_LEVEL_CMAKE "${TOP_LEVEL_CMAKE}" PARENT_SCOPE)
+
+	set(Log_Files_Cleanup Never CACHE STRING "Whether to clean log files (Success, Always, Never)")
+
+	option(Recode OFF "")
+	if(ffmpeg_FOUND)
+		add_recode_target()
+	endif(ffmpeg_FOUND)
+
+	add_index_target()
+
+	if(iTunes_FOUND AND osascript_FOUND)
+		add_iTunes_import_target()
+	endif()
+endfunction(add_media_library_maintenance_targets)
