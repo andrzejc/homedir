@@ -1,2 +1,51 @@
 #!/usr/bin/env bash
-media-library-maintenance --mode iTunes_import_all "$@"
+set -e -o pipefail
+
+function check_missing() {
+    local missing=
+    for f in "$@"
+    do
+        if [ ! which 2>&1 > /dev/null "${f}" ]
+        then
+            missing="${missing:+${missing},}${f}"
+        fi
+    done
+    echo "${missing}"
+}
+
+function check_prerequisites() {
+    local missing="$(check_missing cmake ninja python)"
+    if [ -z "${missing}" ]
+    then
+        echo "Prerequisites missing: ${missing}; install using brew (https://brew.sh/)" >&2
+        exit 1
+    fi
+}
+
+check_prerequisites
+
+function rel_path() {
+    local target="$1"
+    local python_cmd="import os.path; print os.path.relpath('${target}', '${HOME}')"
+    python -c "${python_cmd}"
+}
+
+SOURCE_DIR="${1:-.}"
+SOURCE_REL="$(rel_path "${SOURCE_DIR}")"
+WORK_DIR="${HOME}/.mlm/${SOURCE_REL}"
+SOURCE_INDEX="${SOURCE_DIR}/.mlm/import.index"
+
+function setup_work_dir() {
+    mkdir -p "${WORK_DIR}"
+}
+
+function copy_index() {
+    if [ -r "${SOURCE_INDEX}" ]
+    then
+        cmake -E copy_if_different "${SOURCE_INDEX}" "${WORK_DIR}"
+    fi
+}
+
+setup_work_dir
+copy_index
+media-library-maintenance --generator Ninja --mode iTunes_import_all --work-dir "${WORK_DIR}" "$@"
