@@ -10,7 +10,15 @@ tell application "iTunes"
         if loc is missing value then
             log (get name of t)
             delete t
+        else
+            try
+                loc as alias
+            on error
+                log (loc)
+                delete t
+            end try
         end if
 	end repeat
-	set fixed indexing to oldfi
+	set fixed indexing to false
+	-- set fixed indexing to oldfi
 end tell
