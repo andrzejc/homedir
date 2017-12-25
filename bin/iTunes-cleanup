@@ -1,0 +1,16 @@
+#!/usr/bin/env osascript
+
+tell application "iTunes"
+	set oldfi to fixed indexing
+	set fixed indexing to true
+    set pl to library playlist 1
+	repeat with i from 1 to count file tracks of pl
+		set t to file track i of pl
+        set loc to location of t
+        if loc is missing value then
+            log (get name of t)
+            delete t
+        end if
+	end repeat
+	set fixed indexing to oldfi
+end tell
