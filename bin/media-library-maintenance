@@ -41,8 +41,7 @@ set_generator() {
 generate_cmake_lists() {
 	local cmake_lists_target="${SOURCE_DIR}/CMakeLists.txt"
 	local cmake_lists_real="${WORK_DIR}/CMakeLists.txt"
-	trap "echo 'Cleaning up...'; rm -f "${cmake_lists_target}"" EXIT
-	[ -f "${cmake_lists_real}" ] || {
+	test -f "${cmake_lists_real}"  || {
 		# fresh directory, do some setup
 		# minimal CMakeLists.txt file
 		echo "Creating minimal CMakeLists.txt file..."
@@ -54,7 +53,11 @@ generate_cmake_lists() {
 			add_media_library_maintenance_targets()
 			EOF
 	}
-	ln -sf "${cmake_lists_real}" "${cmake_lists_target}"
+	if [ ! -f "${cmake_lists_target}" ] || ! diff -q "${cmake_lists_real}" "${cmake_lists_target}"
+	then
+		trap "echo 'Cleaning up...'; rm -f "${cmake_lists_target}"" EXIT
+		rsync -q --times "${cmake_lists_real}" "${cmake_lists_target}"
+	fi
 }
 
 cmake_common_opts() {
