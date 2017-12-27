@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-media-library-maintenance --mode recode_all "$@"
+media-library-maintenance --mode recode "$@"

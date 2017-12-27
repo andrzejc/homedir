@@ -1,27 +1,47 @@
 #!/usr/bin/env bash
 set -e -o pipefail
-
 # set -x
 
-HOMEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
-CMAKE_COMMAND="${CMAKE_COMMAND:-cmake}"
+THIS_FILE="${BASH_SOURCE[0]}"
+HOMEDIR="$(cd "$(dirname "${THIS_FILE}")"/.. && pwd)"
+
+function check_missing() {
+	local missing=
+	for f in "$@"
+	do
+		if ! which 2>&1 > /dev/null "${f}"
+		then
+			missing="${missing:+${missing},}${f}"
+		fi
+	done
+	echo "${missing}"
+}
+
+function check_prerequisites() {
+	local missing="$(check_missing "${@}")"
+	if [ -n "${missing}" ]
+	then
+		echo "Prerequisites missing: ${missing}; install using brew (https://brew.sh/)" >&2
+		exit 1
+	fi
+}
 
 create_work_dir() {
-	"${CMAKE_COMMAND}" -E make_directory "${work_dir}"
+	"${CMAKE_COMMAND}" -E make_directory "${WORK_DIR}"
 }
 
 set_generator() {
 	local gen="$1"
 	# set generator only on first run
-	[ -f "${work_dir}/CMakeCache.txt" ] || \
+	[ -f "${WORK_DIR}/CMakeCache.txt" ] || \
 		[ "${gen}" == "" ] || \
 			gen_cmd="-G"${gen}""
 }
 
 generate_cmake_lists() {
-	local cmake_lists_target="${dir}/CMakeLists.txt"
-	local cmake_lists_real="${work_dir}/CMakeLists.txt"
-	# trap "echo 'Cleaning up...'; rm -f "${cmake_lists_target}"" EXIT
+	local cmake_lists_target="${SOURCE_DIR}/CMakeLists.txt"
+	local cmake_lists_real="${WORK_DIR}/CMakeLists.txt"
+	trap "echo 'Cleaning up...'; rm -f "${cmake_lists_target}"" EXIT
 	[ -f "${cmake_lists_real}" ] || {
 		# fresh directory, do some setup
 		# minimal CMakeLists.txt file
@@ -34,71 +54,90 @@ generate_cmake_lists() {
 			add_media_library_maintenance_targets()
 			EOF
 	}
-	# ln -sf "${cmake_lists_real}" "${cmake_lists_target}"
-	"${CMAKE_COMMAND}" -E copy_if_different "${cmake_lists_real}" "${cmake_lists_target}"
+	ln -sf "${cmake_lists_real}" "${cmake_lists_target}"
 }
 
 cmake_common_opts() {
-	local dir_abs="$(cd "${dir}" && pwd)"
+	local dir_abs="$(cd "${SOURCE_DIR}" && pwd)"
 	echo "-DCMAKE_MODULE_PATH:INTERNAL=${HOMEDIR}/cmake"
 	echo "${gen_cmd}"
 	echo "${dir_abs}"
 }
 
 cmake_generate() {
-	"${CMAKE_COMMAND}" -E chdir "${work_dir}" "${CMAKE_COMMAND}" $(cmake_common_opts)
+	"${CMAKE_COMMAND}" -E chdir "${WORK_DIR}" "${CMAKE_COMMAND}" $(cmake_common_opts)
 }
 
 cmake_build() {
-	# "${CMAKE_COMMAND}" --build "${work_dir}" ${target_opt} -- -d explain -v 
-	"${CMAKE_COMMAND}" --build "${work_dir}" --target "${1}"
+	# "${CMAKE_COMMAND}" --build "${WORK_DIR}" ${target_opt} -- -d explain -v
+	"${CMAKE_COMMAND}" --build "${WORK_DIR}" --target "${1}"
 }
 
 cmake_ccmake() {
 	local ccmake_cmd="$(dirname "$(which "${CMAKE_COMMAND}")")"/ccmake
-	"${CMAKE_COMMAND}" -E chdir "${work_dir}" "${ccmake_cmd}" $(cmake_common_opts)
+	"${CMAKE_COMMAND}" -E chdir "${WORK_DIR}" "${ccmake_cmd}" $(cmake_common_opts)
 }
 
-run_config=
-while [ $# -gt 0 ]
-do
-	case "$1" in
-	--config)    shift; run_config=1; ;;
-	--generator) shift; generator="$1"; shift ;;
-    --mode)      shift; mode="$1"; shift ;;
-	--work-dir)  shift; work_dir="$1"; shift; ;;
-	--force)     shift; force=1; ;;
-	--help)      shift; # TODO 
-		;;
-	*)           dir="$1"; shift; ;;
-	esac
-done
+MLM_TARGET="${MLM_TARGET:-index}"
+SOURCE_DIR="${SOURCE_DIR:-"${PWD}"}"
+WORK_DIR="${WORK_DIR:-"${SOURCE_DIR}"/.mlm}"
 
-mode="${mode:-index}"
-dir="${dir:-.}"
-work_dir="${work_dir:-"${dir}"/.mlm}"
-generator="${generator:-}"
-force="${force:-0}"
+ninja_path="$(which ninja 2> /dev/null)"
+gen_default="${ninja_path:+Ninja}"
+CMAKE_COMMAND="${CMAKE_COMMAND:-"$(which cmake)"}"
+CMAKE_GENERATOR="${CMAKE_GENERATOR:-"${gen_default}"}"
+MLM_FORCE="${MLM_FORCE:-0}"
 gen_cmd=
 
-create_work_dir
-set_generator "${generator}"
-generate_cmake_lists
+function mlm_parse_args() {
+	while [ $# -gt 0 ]
+	do
+		case "$1" in
+		--config|-c)    shift; MLM_TARGET=config; ;;
+		--generator|-g) shift; CMAKE_GENERATOR="$1"; shift ;;
+		--mode|-m)      shift; MLM_TARGET="$1"; shift ;;
+		--work-dir|-w)  shift; WORK_DIR="$1"; shift; ;;
+		--force|-f)     shift; MLM_FORCE=1; ;;
+		--help|-h)      shift; # TODO
+			;;
+		*)              SOURCE_DIR="$1"; shift; ;;
+		esac
+	done
+}
 
-if [ "${mode}" == index ] && [ "${force}" == 1 ]
-then
-	rm -f "${work_dir}"/import.index
-fi
+function mlm_run() {
+	check_prerequisites cmake
+	create_work_dir
+	set_generator "${CMAKE_GENERATOR}"
+	generate_cmake_lists
 
-if [ "${run_config}" == 1 ]
-then
-	cmake_ccmake
-else
-	cmake_generate
-	cmake_build "${mode}"
-	if [ "${mode}" != index ]
+	if [ "${MLM_TARGET}" == index ] && [ "${MLM_FORCE}" == 1 ]
 	then
-		# cmake_generate &&
-		cmake_build "${mode}"
+		rm -f "${WORK_DIR}"/import.index
 	fi
+
+	if [ "${MLM_TARGET}" == config ]
+	then
+		cmake_ccmake
+	else
+		cmake_generate
+		cmake_build "${MLM_TARGET}"
+		if [ "${MLM_TARGET}" != index ]
+		then
+			# this might've been deleted by other mlm process meanwhile
+			generate_cmake_lists
+			# cmake_generate &&
+			cmake_build "${MLM_TARGET}"
+		fi
+	fi
+}
+
+function mlm_main() {
+	mlm_parse_args "$@"
+	mlm_run
+}
+
+if [ "$0" == "${THIS_FILE}" ]
+then
+	mlm_main "$@"
 fi

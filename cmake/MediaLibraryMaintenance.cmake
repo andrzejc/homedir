@@ -449,7 +449,7 @@ function(add_media_library_maintenance_targets)
 	find_package(osascript)
 	find_package(iTunes)
 
-	set(CMAKE_CACHE_FILE "${CMAKE_CACHEFILE_DIR}/CMakeCache.txt")
+	set(CMAKE_CACHE_FILE "${CMAKE_BINARY_DIR}/CMakeCache.txt")
 	set(CMAKE_CACHE_FILE "${CMAKE_CACHE_FILE}" PARENT_SCOPE)
 	set(_MEDIA_LIBRARY_MAINTENANCE_TOKEN "T00000000" CACHE INTERNAL "")
 
