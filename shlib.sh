@@ -194,7 +194,7 @@ shpath_pre() { shpath_join before "$@"; }
 shpath_app() { shpath_join after  "$@"; }
 
 shpath_get_ext() {
-	for f in "$@" 
+	for f in "$@"
 	do
 		local base="${f##*/}"
 		[[ "${base}" == *.* ]] && echo ".${base##*.}" || echo ''
@@ -265,4 +265,56 @@ shlist_suffix() {
 	local suffix="$1"
 	shift
 	shlist_infix "" "${suffix}" "$@"
+}
+
+shpath_abs() {
+	local path="$1"
+	if [[ "${path}" != /* ]]
+	then
+		path="${PWD}/${path}"
+	fi
+	echo "${path}"
+}
+
+shpath_relto() {
+	local target="$(shpath_abs "${1}")"
+	local base="$(shpath_abs "${2}")"
+	 # returns relative path to $target from $base
+	local common_part="${base}"
+	local result=""
+
+	while [[ "${target#$common_part}" == "${target}" ]]
+	do
+		# no match, means that candidate common part is not correct
+		# go up one level (reduce common part)
+		common_part="$(dirname "${common_part}")"
+		# and record that we went back, with correct / handling
+		if [[ -z "${result}" ]]
+		then
+			result=".."
+		else
+			result="../${result}"
+		fi
+	done
+
+	if [[ "${common_part}" == "/" ]]
+	then
+		# special case for root (no common path)
+		result="${result}/"
+	fi
+
+	# since we now have identified the common part,
+	# compute the non-common part
+	forward_part="${target#$common_part}"
+
+	# and now stick all parts together
+	if [[ -n "${result}" ]] && [[ -n "${forward_part}" ]]
+	then
+		result="${result}${forward_part}"
+	elif [[ -n "${forward_part}" ]]
+	then
+		# extra slash removal
+		result="${forward_part:1}"
+	fi
+	echo "${result}"
 }
