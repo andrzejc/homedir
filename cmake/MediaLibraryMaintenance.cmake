@@ -97,9 +97,9 @@ if(MEDIA_LIBRARY_MAINTENANCE_JOB STREQUAL ffmpeg)
 
 	set(ffmpeg_log)
 	set(ffmpeg_cmd "${ffmpeg_EXECUTABLE}" -i "${in}" -vn -c:a "${Audio_Codec}" -b:a "${Audio_Bitrate}" -f "${Audio_Format}" -n -nostats -nostdin "${tmp_out}")
-	execute_process(COMMAND ${ffmpeg_cmd} 
-		RESULT_VARIABLE res 
-		OUTPUT_VARIABLE ffmpeg_log 
+	execute_process(COMMAND ${ffmpeg_cmd}
+		RESULT_VARIABLE res
+		OUTPUT_VARIABLE ffmpeg_log
 		ERROR_VARIABLE ffmpeg_log)
 	strjoin(ffmpeg_cmd " " ${ffmpeg_cmd})
 	log_debug("${ffmpeg_cmd}: ${res}\n${ffmpeg_log}\n")
@@ -152,10 +152,10 @@ elseif("${MEDIA_LIBRARY_MAINTENANCE_JOB}" STREQUAL "iTunes_import")
 	log_debug("Importing '${file}' to iTunes Library")
 	string(REPLACE "\"" "\\\"" esc_file "${file}")
 	set(osascript_log)
-	set(osascript_cmd "${osascript_EXECUTABLE}" -e "tell application \"iTunes\" to add POSIX file \"${esc_file}\"")
-	execute_process(COMMAND ${osascript_cmd} 
-		RESULT_VARIABLE res 
-		OUTPUT_VARIABLE osascript_log 
+	set(osascript_cmd "${osascript_EXECUTABLE}" -e "with timeout 240 seconds" -e "tell application \"iTunes\" to add POSIX file \"${esc_file}\"" -e "end timeout")
+	execute_process(COMMAND ${osascript_cmd}
+		RESULT_VARIABLE res
+		OUTPUT_VARIABLE osascript_log
 		ERROR_VARIABLE osascript_log)
 	strjoin(osascript_cmd " " ${osascript_cmd})
 	log_debug("${osascript_cmd}: ${res}\n${osascript_log}\n")
@@ -255,7 +255,7 @@ function(add_recode_ffmpeg in out)
 	export_vars(vars in out log Existing_Files Original_Cleanup Audio_Format Audio_Codec Audio_Bitrate ffmpeg_EXECUTABLE)
 	string(REGEX MATCH "\\.[^.]*\$" out_ext "${out}")
 	file(RELATIVE_PATH in_rel "${CMAKE_SOURCE_DIR}" "${in}")
-	create_job_output("${out}" ffmpeg "" "${vars}" "${in}" 
+	create_job_output("${out}" ffmpeg "" "${vars}" "${in}"
 		"Recoding '${in_rel}' -> '${out_ext}' using ffmpeg")
 endfunction(add_recode_ffmpeg)
 
@@ -272,7 +272,7 @@ endfunction(split_base_ext)
 
 function(add_glob_job out dir pattern)
 	export_vars(vars pattern out log)
-	create_job_output("${out}" glob_dir "${dir}" "${vars}" "" 
+	create_job_output("${out}" glob_dir "${dir}" "${vars}" ""
 		"Indexing files in '${dir}'")
 endfunction(add_glob_job)
 
@@ -308,8 +308,8 @@ function(add_check_reconfigure target stamp index)
 endfunction(add_check_reconfigure)
 
 function(add_force_reconfigure target before after)
-	add_custom_target("${target}" 
-		COMMAND "${CMAKE_COMMAND}" 
+	add_custom_target("${target}"
+		COMMAND "${CMAKE_COMMAND}"
 			"-DMEDIA_LIBRARY_MAINTENANCE_JOB=force_reconfigure"
 			"-DCMAKE_CACHE_FILE=${CMAKE_CACHE_FILE}"
 			-P "${MEDIA_LIBRARY_MAINTENANCE_MODULE_PATH}"
@@ -334,7 +334,7 @@ function(add_recode_target)
 
 	if(NOT EXISTS "${RECODE_INDEX}")
 		add_glob_job("${RECODE_INDEX}" "${CMAKE_SOURCE_DIR}" "${Recode_Pattern}")
-		add_custom_target(recode_index 
+		add_custom_target(recode_index
 			DEPENDS "${RECODE_INDEX}"
 			COMMENT "Indexing..."
 			VERBATIM)
@@ -356,7 +356,7 @@ function(add_recode_target)
 			COMMENT "Recoding..."
 			VERBATIM)
 		add_create_stamp("${RECODE_STAMP}" "${RECODE_INDEX};${out_files}")
-		add_custom_target(recode_stamp 
+		add_custom_target(recode_stamp
 			DEPENDS "${RECODE_STAMP}"
 			COMMENT "Stamping..."
 			VERBATIM)
@@ -379,7 +379,7 @@ function(add_index_target)
 	set(log "${CMAKE_BINARY_DIR}/index.log")
 	log_info("index: available")
 	add_glob_job("${IMPORT_INDEX}" "${CMAKE_SOURCE_DIR}" "${Import_Pattern}")
-	add_custom_target(index 
+	add_custom_target(index
 		DEPENDS "${IMPORT_INDEX}"
 		COMMENT "Indexing files to import in '${CMAKE_SOURCE_DIR}'...")
 endfunction(add_index_target)
@@ -387,7 +387,7 @@ endfunction(add_index_target)
 function(add_iTunes_import stamp file)
 	export_vars(vars stamp file log osascript_EXECUTABLE)
 	file(RELATIVE_PATH file_rel "${CMAKE_SOURCE_DIR}" "${file}")
-	create_job_output("${stamp}" iTunes_import "" "${vars}" "${file}" 
+	create_job_output("${stamp}" iTunes_import "" "${vars}" "${file}"
 		"Importing '${file_rel}' to iTunes library")
 endfunction(add_iTunes_import)
 
@@ -408,7 +408,7 @@ function(add_iTunes_import_target)
 	set(log "${CMAKE_BINARY_DIR}/iTunes_import.log")
 
 	if(NOT EXISTS "${IMPORT_INDEX}")
-		add_custom_target(iTunes_import 
+		add_custom_target(iTunes_import
 			DEPENDS "${IMPORT_INDEX}"
 			COMMENT "Indexing complete."
 			VERBATIM)
@@ -434,7 +434,7 @@ function(add_iTunes_import_target)
 			log_info("iTunes_import: available, created importers from index")
 		else()
 			log_info("iTunes_import: available, created index checker")
-		endif() 
+		endif()
 		add_check_reconfigure(iTunes_check_index_updated "${IMPORT_STAMP}" "${IMPORT_INDEX}")
 		if(TARGET iTunes_stamp)
 			add_dependencies(iTunes_check_index_updated iTunes_stamp)
