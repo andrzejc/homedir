@@ -3,7 +3,7 @@ homedir_module git-prompt.sh
 homedir_module ansi-colors.sh
 
 # Use HOSTNAME_LOCAL in .profile.local to override displayed hostname
-HOSTNAME_PROMPT="${HOSTNAME_LOCAL:-$(hostname)}"
+HOSTNAME_PROMPT="${HOSTNAME_LOCAL:-$(hostname -s)}"
 
 # affects working of __git_ps1 function below, taken from git-prompt.sh
 export GIT_PS1_SHOWDIRTYSTATE=1
