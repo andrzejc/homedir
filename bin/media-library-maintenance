@@ -54,8 +54,9 @@ generate_cmake_lists() {
 			EOF
 	}
 	local lock="${SOURCE_DIR}/.cmake-lock.$(hostname -s).$$"
+	local trap_cmd="echo 'Cleaning up...'; rm -f \""${lock}"\"; test -f \""${SOURCE_DIR}"/.cmake-lock.*\" || rm -f \""${cmake_lists_target}"\""
 	touch "${lock}" && \
-		trap "echo 'Cleaning up...'; rm -f "${lock}"; test -f "${SOURCE_DIR}"/.cmake-lock.* || rm -f "${cmake_lists_target}"" EXIT
+		trap  "${trap_cmd}" EXIT
 
 	if [ ! -f "${cmake_lists_target}" ] || \
 	   ! diff -q "${cmake_lists_real}" "${cmake_lists_target}" 2>&1 > /dev/null
@@ -66,13 +67,16 @@ generate_cmake_lists() {
 
 cmake_common_opts() {
 	local dir_abs="$(cd "${SOURCE_DIR}" && pwd)"
-	echo "-DCMAKE_MODULE_PATH:INTERNAL=${HOMEDIR}/cmake"
-	echo "${CMAKE_GENERATOR_OPT}"
-	echo "${dir_abs}"
+	local -a arr=()
+	arr+=("-DCMAKE_MODULE_PATH:INTERNAL=${HOMEDIR}/cmake")
+	arr+=("${CMAKE_GENERATOR_OPT}")
+	arr+=("${dir_abs}")
+	declare -p arr | sed -e 's/^declare -a [^=]*=//'
 }
 
 cmake_generate() {
-	"${CMAKE_COMMAND}" -E chdir "${WORK_DIR}" "${CMAKE_COMMAND}" $(cmake_common_opts)
+	eval "declare -a opts="$(cmake_common_opts)""
+	"${CMAKE_COMMAND}" -E chdir "${WORK_DIR}" "${CMAKE_COMMAND}" "${opts[@]}"
 }
 
 cmake_build() {
@@ -82,7 +86,8 @@ cmake_build() {
 
 cmake_ccmake() {
 	local ccmake_cmd="$(dirname "$(which "${CMAKE_COMMAND}")")"/ccmake
-	"${CMAKE_COMMAND}" -E chdir "${WORK_DIR}" "${ccmake_cmd}" $(cmake_common_opts)
+	eval "declare -a opts="$(cmake_common_opts)""
+	"${CMAKE_COMMAND}" -E chdir "${WORK_DIR}" "${ccmake_cmd}" "${opts[@]}"
 }
 
 function mlm_parse_args() {
