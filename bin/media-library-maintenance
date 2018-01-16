@@ -9,7 +9,7 @@ function check_missing() {
 	local missing=
 	for f in "$@"
 	do
-		if ! which 2>&1 > /dev/null "${f}"
+		if ! which "${f}" > /dev/null 2>&1
 		then
 			missing="${missing:+${missing},}${f}"
 		fi
@@ -35,7 +35,7 @@ set_generator() {
 	# set generator only on first run
 	[ -f "${WORK_DIR}/CMakeCache.txt" ] || \
 		[ "${gen}" == "" ] || \
-			CMAKE_GENERATOR_OPT="-G"${gen}""
+			CMAKE_GENERATOR_OPT="-G${gen}"
 }
 
 generate_cmake_lists() {
@@ -54,12 +54,12 @@ generate_cmake_lists() {
 			EOF
 	}
 	local lock="${SOURCE_DIR}/.cmake-lock.$(hostname -s).$$"
-	local trap_cmd="echo 'Cleaning up...'; rm -f \""${lock}"\"; test -f \""${SOURCE_DIR}"/.cmake-lock.*\" || rm -f \""${cmake_lists_target}"\""
+	local trap_cmd="echo \"Cleaning up...\"; rm -fv \"${lock}\"; ls \"${SOURCE_DIR}/.cmake-lock.*\" > /dev/null 2>&1 || rm -fv \"${cmake_lists_target}\""
 	touch "${lock}" && \
 		trap  "${trap_cmd}" EXIT
 
 	if [ ! -f "${cmake_lists_target}" ] || \
-	   ! diff -q "${cmake_lists_real}" "${cmake_lists_target}" 2>&1 > /dev/null
+	   ! diff -q "${cmake_lists_real}" "${cmake_lists_target}" > /dev/null 2>&1
 	then
 		rsync -q --times "${cmake_lists_real}" "${cmake_lists_target}"
 	fi
@@ -75,7 +75,7 @@ cmake_common_opts() {
 }
 
 cmake_generate() {
-	eval "declare -a opts="$(cmake_common_opts)""
+	eval "declare -a opts=$(cmake_common_opts)"
 	"${CMAKE_COMMAND}" -E chdir "${WORK_DIR}" "${CMAKE_COMMAND}" "${opts[@]}"
 }
 
@@ -86,7 +86,7 @@ cmake_build() {
 
 cmake_ccmake() {
 	local ccmake_cmd="$(dirname "$(which "${CMAKE_COMMAND}")")"/ccmake
-	eval "declare -a opts="$(cmake_common_opts)""
+	eval "declare -a opts=$(cmake_common_opts)"
 	"${CMAKE_COMMAND}" -E chdir "${WORK_DIR}" "${ccmake_cmd}" "${opts[@]}"
 }
 
