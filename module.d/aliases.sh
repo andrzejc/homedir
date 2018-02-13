@@ -49,3 +49,13 @@ extract() {
 }
 
 zipf () { zip -r "$1".zip "$1" ; }          # zipf:         To create a ZIP archive of a folder
+
+splitf () {
+	local in="$1"
+	local f="${in%.*}"
+	local target="${HOME}/Music/nas/!WRZUTNIA/${f}"
+	mkdir -p "${target}"
+	shnsplit -f "${f}.cue" -t '%n-%t' -o flac -d "${target}" "${in}" && \
+		rm "${f}.cue" "${in}"
+}
+
