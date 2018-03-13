@@ -137,13 +137,13 @@ function mlm_main() {
 	mlm_parse_args "$@"
 
 	MLM_TARGET="${MLM_TARGET:-index}"
-	SOURCE_DIR="${SOURCE_DIR:-"${PWD}"}"
-	WORK_DIR="${WORK_DIR:-"${SOURCE_DIR}"/.mlm}"
+	SOURCE_DIR="${SOURCE_DIR:-${PWD}}"
+	WORK_DIR="${WORK_DIR:-${SOURCE_DIR}/.mlm}"
 
 	local ninja_path="$(which ninja 2> /dev/null)"
 	local gen_default="${ninja_path:+Ninja}"
-	CMAKE_COMMAND="${CMAKE_COMMAND:-"$(which cmake)"}"
-	CMAKE_GENERATOR="${CMAKE_GENERATOR:-"${gen_default}"}"
+	CMAKE_COMMAND="${CMAKE_COMMAND:-$(which cmake)}"
+	CMAKE_GENERATOR="${CMAKE_GENERATOR:-${gen_default}}"
 	MLM_FORCE="${MLM_FORCE:-0}"
 	CMAKE_GENERATOR_OPT=
 
