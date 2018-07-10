@@ -39,8 +39,8 @@ homedir_module setup-prompt.sh
 homedir_module xterm-titlebar.sh
 homedir_module lessopen.sh
 homedir_module brew-overrides.sh
-homedir_module perlbrew.sh
-# homedir_module perl-local-lib.sh
+# homedir_module perlbrew.sh
+homedir_module perl-local-lib.sh
 homedir_module pyenv.sh
 homedir_module aliases.sh
 homedir_module git-completion.sh
